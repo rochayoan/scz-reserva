@@ -1,4 +1,4 @@
-import { Card, CardContent, SectionLabel, SectionTitle } from "./ui";
+import { Card, CardContent, SectionLabel, SectionTitle } from "../ui";
 
 const solutions = [
   { icon: "📍", title: "Canchas centralizadas", text: "Todos los complejos deportivos de Santa Cruz en un solo lugar." },

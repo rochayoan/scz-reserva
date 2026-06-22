@@ -1,5 +1,5 @@
-import { Card, CardContent, SectionLabel, SectionTitle } from "./ui";
-import { problems } from "../data";
+import { Card, CardContent, SectionLabel, SectionTitle } from "../ui";
+import { problems } from "../../data";
 
 export default function ProblemSection() {
   return (

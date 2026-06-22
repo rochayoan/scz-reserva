@@ -1,4 +1,4 @@
-import { Card, CardContent, Badge, Button, SectionLabel, SectionTitle } from "./ui";
+import { Card, CardContent, Badge, Button, SectionLabel, SectionTitle } from "../ui";
 
 export default function CourtList({
   courts,

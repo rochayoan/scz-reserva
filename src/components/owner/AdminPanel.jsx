@@ -1,5 +1,5 @@
-import { Card, CardContent, Button, Badge, SectionLabel, SectionTitle } from "./ui";
-import { adminReservations } from "../data";
+import { Card, CardContent, Button, Badge, SectionLabel, SectionTitle } from "../ui";
+import { adminReservations } from "../../data";
 
 export default function AdminPanel() {
   const kpis = [

@@ -1,16 +1,16 @@
 import { useState, useMemo } from "react";
 import { courts } from "./data";
-import Header from "./components/Header";
-import Hero from "./components/Hero";
-import ProblemSection from "./components/ProblemSection";
-import SolutionSection from "./components/SolutionSection";
-import CourtList from "./components/CourtList";
-import BookingFlow from "./components/BookingFlow";
-import HowItWorks from "./components/HowItWorks";
-import BenefitsSection from "./components/BenefitsSection";
-import AdminPanel from "./components/AdminPanel";
-import CTASection from "./components/CTASection";
-import Footer from "./components/Footer";
+import Header from "./components/layout/Header";
+import Hero from "./components/marketing/Hero";
+import ProblemSection from "./components/marketing/ProblemSection";
+import SolutionSection from "./components/marketing/SolutionSection";
+import CourtList from "./components/booking/CourtList";
+import BookingFlow from "./components/booking/BookingFlow";
+import HowItWorks from "./components/marketing/HowItWorks";
+import BenefitsSection from "./components/marketing/BenefitsSection";
+import AdminPanel from "./components/owner/AdminPanel";
+import CTASection from "./components/marketing/CTASection";
+import Footer from "./components/layout/Footer";
 
 export default function App() {
   const [dark, setDark] = useState(false);

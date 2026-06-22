@@ -1,5 +1,5 @@
-import { Card, CardContent, SectionLabel, SectionTitle } from "./ui";
-import { benefitsUser, benefitsOwner } from "../data";
+import { Card, CardContent, SectionLabel, SectionTitle } from "../ui";
+import { benefitsUser, benefitsOwner } from "../../data";
 
 export default function BenefitsSection() {
   return (

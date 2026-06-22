@@ -1,5 +1,5 @@
-import { Card, CardContent, SectionLabel, SectionTitle } from "./ui";
-import { steps } from "../data";
+import { Card, CardContent, SectionLabel, SectionTitle } from "../ui";
+import { steps } from "../../data";
 
 export default function HowItWorks() {
   return (

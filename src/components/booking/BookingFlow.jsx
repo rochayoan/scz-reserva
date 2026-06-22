@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, Button, SectionLabel, SectionTitle } from "./ui";
+import { Card, CardContent, Button, SectionLabel, SectionTitle } from "../ui";
 
 export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
   const [bookingDone, setBookingDone] = useState(false);

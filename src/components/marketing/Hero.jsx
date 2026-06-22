@@ -1,5 +1,5 @@
-import { Button } from "./ui";
-import { stats } from "../data";
+import { Button } from "../ui";
+import { stats } from "../../data";
 
 export default function Hero() {
   return (
