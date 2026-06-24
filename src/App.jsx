@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { courts } from "./data";
+import { getCourts } from "./lib/dataService";
 import Header from "./components/layout/Header";
 import Hero from "./components/marketing/Hero";
 import ProblemSection from "./components/marketing/ProblemSection";
@@ -13,6 +13,7 @@ import CTASection from "./components/marketing/CTASection";
 import Footer from "./components/layout/Footer";
 
 export default function App() {
+  const courts = getCourts();
   const [dark, setDark] = useState(false);
   const [search, setSearch] = useState("");
   const [sport, setSport] = useState("Todos");
@@ -40,7 +41,7 @@ export default function App() {
         });
       return matchSearch && matchSport && matchZone && matchTime;
     });
-  }, [search, sport, zone, time]);
+  }, [courts, search, sport, zone, time]);
 
   const selectCourt = (court) => {
     setSelectedCourt(court);

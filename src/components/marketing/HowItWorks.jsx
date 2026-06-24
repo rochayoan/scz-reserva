@@ -1,7 +1,8 @@
 import { Card, CardContent, SectionLabel, SectionTitle } from "../ui";
-import { steps } from "../../data";
+import { getSteps } from "../../lib/dataService";
 
 export default function HowItWorks() {
+  const steps = getSteps();
   return (
     <section id="funciona" className="px-4 py-16 md:px-8">
       <div className="mx-auto max-w-7xl">

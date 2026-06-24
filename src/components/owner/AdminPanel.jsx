@@ -1,7 +1,8 @@
 import { Card, CardContent, Button, Badge, SectionLabel, SectionTitle } from "../ui";
-import { adminReservations } from "../../data";
+import { getAdminReservations } from "../../lib/dataService";
 
 export default function AdminPanel() {
+  const adminReservations = getAdminReservations();
   const kpis = [
     { label: "Ingresos del día", value: "Bs 1.860", change: "+18% vs ayer", icon: "💰", positive: true },
     { label: "Reservas activas", value: "24", change: "6 horarios disponibles", icon: "📋", positive: true },

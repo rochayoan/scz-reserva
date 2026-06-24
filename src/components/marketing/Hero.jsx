@@ -1,7 +1,8 @@
 import { Button } from "../ui";
-import { stats } from "../../data";
+import { getStats } from "../../lib/dataService";
 
 export default function Hero() {
+  const stats = getStats();
   return (
     <section id="inicio" className="relative overflow-hidden px-4 py-8 md:px-8 md:py-14">
       <div className="mx-auto grid max-w-7xl items-center gap-8 rounded-[2rem] bg-gradient-to-br from-emerald-600 via-emerald-700 to-slate-950 p-6 text-white shadow-2xl shadow-emerald-900/30 md:grid-cols-2 md:p-12 lg:p-16">

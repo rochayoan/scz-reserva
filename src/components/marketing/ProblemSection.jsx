@@ -1,7 +1,8 @@
 import { Card, CardContent, SectionLabel, SectionTitle } from "../ui";
-import { problems } from "../../data";
+import { getProblems } from "../../lib/dataService";
 
 export default function ProblemSection() {
+  const problems = getProblems();
   return (
     <section className="px-4 py-16 md:px-8">
       <div className="mx-auto max-w-7xl">

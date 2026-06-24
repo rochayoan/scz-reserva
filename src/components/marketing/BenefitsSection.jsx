@@ -1,7 +1,9 @@
 import { Card, CardContent, SectionLabel, SectionTitle } from "../ui";
-import { benefitsUser, benefitsOwner } from "../../data";
+import { getBenefitsUser, getBenefitsOwner } from "../../lib/dataService";
 
 export default function BenefitsSection() {
+  const benefitsUser = getBenefitsUser();
+  const benefitsOwner = getBenefitsOwner();
   return (
     <section id="duenos" className="px-4 py-16 md:px-8">
       <div className="mx-auto max-w-7xl">
