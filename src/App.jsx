@@ -80,9 +80,26 @@ export default function App() {
           </p>
         )}
         {courtsLoading || !selectedCourt ? (
-          <div className="px-4 py-16 text-center text-sm text-slate-400 md:px-8">
-            Cargando canchas...
-          </div>
+          <section className="px-4 py-12 md:px-8 md:py-16">
+            <div className="mx-auto max-w-7xl">
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 animate-pulse"
+                  >
+                    <div className="h-44 w-full bg-slate-200 dark:bg-slate-800" />
+                    <div className="space-y-3 p-5">
+                      <div className="h-4 w-2/3 rounded-full bg-slate-200 dark:bg-slate-800" />
+                      <div className="h-3 w-1/2 rounded-full bg-slate-200 dark:bg-slate-800" />
+                      <div className="h-3 w-1/3 rounded-full bg-slate-200 dark:bg-slate-800" />
+                      <div className="mt-4 h-10 w-full rounded-2xl bg-slate-200 dark:bg-slate-800" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
         ) : (
           <>
             <CourtList

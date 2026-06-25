@@ -154,13 +154,13 @@ export default function CourtList({
                   {court.times.slice(0, 3).map((time) => (
                     <span
                       key={time}
-                      className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
+                      className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
                     >
                       {time}
                     </span>
                   ))}
                   {court.times.length > 3 && (
-                    <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                       +{court.times.length - 3}
                     </span>
                   )}

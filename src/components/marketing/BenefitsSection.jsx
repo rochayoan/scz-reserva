@@ -30,7 +30,7 @@ export default function BenefitsSection() {
               <ul className="space-y-4">
                 {benefitsUser.map((item) => (
                   <li key={item.text} className="flex items-start gap-3 group">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-sm transition-transform group-hover:scale-110 dark:bg-emerald-950/30">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-sm transition-transform group-hover:scale-110 dark:bg-emerald-950/30">
                       {item.icon}
                     </div>
                     <span className="text-sm pt-1.5 text-slate-700 dark:text-slate-300 font-medium">{item.text}</span>
@@ -57,7 +57,7 @@ export default function BenefitsSection() {
               <ul className="space-y-4">
                 {benefitsOwner.map((item) => (
                   <li key={item.text} className="flex items-start gap-3 group">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-sm transition-transform group-hover:scale-110 dark:bg-emerald-950/30">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-sm transition-transform group-hover:scale-110 dark:bg-emerald-950/30">
                       {item.icon}
                     </div>
                     <span className="text-sm pt-1.5 text-slate-700 dark:text-slate-300 font-medium">{item.text}</span>

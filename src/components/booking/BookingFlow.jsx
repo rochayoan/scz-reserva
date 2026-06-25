@@ -18,7 +18,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
     <section id="reserva" className="px-4 py-16 md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <SectionLabel>Prototipo funcional</SectionLabel>
+          <SectionLabel>Reserva en vivo</SectionLabel>
           <SectionTitle className="mt-2">Reserva rápida</SectionTitle>
         </div>
 
@@ -50,7 +50,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                         {court.sport} · {court.category}
                       </p>
                     </div>
-                    <p className="flex items-center gap-1 rounded-xl bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                    <p className="flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
                       ⭐ {court.rating}
                     </p>
                   </div>
@@ -67,7 +67,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                             setBookingStep(1);
                             setBookingDone(false);
                           }}
-                          className={`rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition-all cursor-pointer ${
+                          className={`rounded-2xl border-2 px-5 py-2.5 text-sm font-bold transition-all cursor-pointer ${
                             selectedTime === time
                               ? "border-emerald-600 bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
                               : "border-slate-200 hover:border-emerald-400 dark:border-slate-700 dark:hover:border-emerald-500"
