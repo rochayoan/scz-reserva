@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { getCourts } from "./lib/dataService";
 import Header from "./components/layout/Header";
 import Hero from "./components/marketing/Hero";
@@ -13,14 +13,33 @@ import CTASection from "./components/marketing/CTASection";
 import Footer from "./components/layout/Footer";
 
 export default function App() {
-  const courts = getCourts();
+  const [courts, setCourts] = useState([]);
+  const [courtsLoading, setCourtsLoading] = useState(true);
+  const [courtsError, setCourtsError] = useState(null);
   const [dark, setDark] = useState(false);
   const [search, setSearch] = useState("");
   const [sport, setSport] = useState("Todos");
   const [zone, setZone] = useState("Todas");
   const [time, setTime] = useState("Cualquiera");
-  const [selectedCourt, setSelectedCourt] = useState(courts[0]);
-  const [selectedTime, setSelectedTime] = useState(courts[0].times[0]);
+  const [selectedCourt, setSelectedCourt] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+
+    getCourts().then(({ data, error }) => {
+      if (!active) return;
+      setCourts(data);
+      setSelectedCourt(data[0] ?? null);
+      setSelectedTime(data[0]?.times?.[0] ?? null);
+      setCourtsError(error);
+      setCourtsLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filteredCourts = useMemo(() => {
     return courts.filter((court) => {
@@ -55,24 +74,37 @@ export default function App() {
         <Hero />
         <ProblemSection />
         <SolutionSection />
-        <CourtList
-          courts={filteredCourts}
-          selectedCourt={selectedCourt}
-          onSelectCourt={selectCourt}
-          search={search}
-          setSearch={setSearch}
-          sport={sport}
-          setSport={setSport}
-          zone={zone}
-          setZone={setZone}
-          time={time}
-          setTime={setTime}
-        />
-        <BookingFlow
-          court={selectedCourt}
-          selectedTime={selectedTime}
-          setSelectedTime={setSelectedTime}
-        />
+        {courtsError && (
+          <p className="mx-auto max-w-7xl px-4 pt-6 text-center text-xs font-medium text-amber-600 dark:text-amber-400 md:px-8">
+            No se pudo conectar con el servidor, mostrando datos de muestra.
+          </p>
+        )}
+        {courtsLoading || !selectedCourt ? (
+          <div className="px-4 py-16 text-center text-sm text-slate-400 md:px-8">
+            Cargando canchas...
+          </div>
+        ) : (
+          <>
+            <CourtList
+              courts={filteredCourts}
+              selectedCourt={selectedCourt}
+              onSelectCourt={selectCourt}
+              search={search}
+              setSearch={setSearch}
+              sport={sport}
+              setSport={setSport}
+              zone={zone}
+              setZone={setZone}
+              time={time}
+              setTime={setTime}
+            />
+            <BookingFlow
+              court={selectedCourt}
+              selectedTime={selectedTime}
+              setSelectedTime={setSelectedTime}
+            />
+          </>
+        )}
         <HowItWorks />
         <BenefitsSection />
         <AdminPanel />

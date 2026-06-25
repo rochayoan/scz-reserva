@@ -87,30 +87,25 @@ async function fetchVenuesAsCourts() {
     .map(mapVenueToCourtCard);
 }
 
-// TEMPORAL: este cache de modulo + carga en background existe UNICAMENTE
-// porque getCourts() debe seguir siendo sincrona mientras App.jsx no maneje
-// loading states (no se autorizo tocar App.jsx en esta etapa). Cuando se
-// autorice, getCourts() debe volverse `async function` que simplemente haga
-// `return await fetchVenuesAsCourts()` con el mismo fallback a mock dentro
-// de un try/catch, y este cache + el disparo en background deben eliminarse
-// por completo. fetchVenuesAsCourts() ya esta escrita para ser reutilizada
-// tal cual en esa migracion futura.
+// Interruptor manual para forzar mock independientemente de si Supabase
+// esta configurado (pruebas / rollback rapido sin tocar mas nada).
 const USE_MOCK_DATA = false;
-let cachedRealCourts = null;
 
-if (!USE_MOCK_DATA && supabase) {
-  fetchVenuesAsCourts()
-    .then((mapped) => {
-      cachedRealCourts = mapped.length > 0 ? mapped : null;
-    })
-    .catch(() => {
-      cachedRealCourts = null;
-    });
-}
+// getCourts() es async: intenta Supabase, cae a mock si falla o si la
+// consulta no devuelve nada todavia (tabla vacia no se trata como error).
+// El llamador (App.jsx) decide que hacer con `error` (ej. aviso no invasivo).
+export async function getCourts() {
+  if (USE_MOCK_DATA || !supabase) {
+    return { data: courts, error: null };
+  }
 
-export function getCourts() {
-  if (cachedRealCourts) return cachedRealCourts;
-  return courts;
+  try {
+    const real = await fetchVenuesAsCourts();
+    if (real.length === 0) return { data: courts, error: null };
+    return { data: real, error: null };
+  } catch (err) {
+    return { data: courts, error: err };
+  }
 }
 
 export function getStats() {
