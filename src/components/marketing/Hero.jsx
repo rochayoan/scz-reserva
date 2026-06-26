@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, MapPin } from "lucide-react";
-import { Button } from "../ui";
+import { Button, SegmentedControl } from "../ui";
 import { stats } from "../../data";
 import HeroPreview from "./HeroPreview";
 
@@ -45,21 +45,7 @@ export default function Hero({ onSearch }) {
           {/* Segmented control de deportes */}
           <div className="mt-8">
             <p className="mb-2 text-xs font-medium text-slate-400">¿Qué quieres jugar?</p>
-            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900">
-              {SPORTS.map((sport) => (
-                <button
-                  key={sport}
-                  onClick={() => selectSport(sport)}
-                  className={`rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-150 ease-out cursor-pointer ${
-                    activeSport === sport
-                      ? "bg-emerald-600 text-white"
-                      : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-                  }`}
-                >
-                  {sport}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl options={SPORTS} value={activeSport} onChange={selectSport} />
           </div>
 
           {/* CTAs */}

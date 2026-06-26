@@ -65,6 +65,32 @@ export function SectionTitle({ children, className = "" }) {
   return <h2 className={`text-2xl font-bold md:text-3xl ${className}`}>{children}</h2>;
 }
 
+// SegmentedControl: selector horizontal de opciones mutuamente excluyentes
+// (Playtomic-style). Controlado: el padre maneja `value` y `onChange`.
+// Usado en el Hero (deportes) y en los filtros de CourtList.
+export function SegmentedControl({ options, value, onChange, className = "" }) {
+  return (
+    <div
+      className={`inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900 ${className}`}
+    >
+      {options.map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => onChange(opt)}
+          className={`rounded-lg px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-150 ease-out cursor-pointer ${
+            value === opt
+              ? "bg-emerald-600 text-white"
+              : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // Icon: wrapper minimo sobre lucide-react para que todo icono de la app pase
 // por un unico tamano estandar (16/20/24, ver DESIGN_SYSTEM.md seccion 6).
 // Todavia sin uso en pantallas — se adopta al migrar Hero/Filtros/Cards/Panel.
