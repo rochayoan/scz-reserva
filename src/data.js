@@ -81,7 +81,7 @@ export const courts = [
 ];
 
 export const stats = [
-  { label: "Reservas simuladas", value: "+1.240" },
+  { label: "Reservas gestionadas", value: "+1.240" },
   { label: "Complejos piloto", value: "18" },
   { label: "Zonas cubiertas", value: "10" },
 ];

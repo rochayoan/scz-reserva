@@ -67,11 +67,18 @@ export default function App() {
     setSelectedTime(court.times[0]);
   };
 
+  // Callback estrecha para el Hero: setea el filtro de deporte y baja a #canchas.
+  // El Hero no conoce el estado de filtros ni a CourtList; solo llama onSearch.
+  const handleHeroSearch = (sport) => {
+    setSport(sport ?? "Todos");
+    document.getElementById("canchas")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className={dark ? "dark" : ""}>
       <div className="min-h-screen bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white font-sans">
         <Header dark={dark} setDark={setDark} />
-        <Hero />
+        <Hero onSearch={handleHeroSearch} />
         <ProblemSection />
         <SolutionSection />
         {courtsError && (
