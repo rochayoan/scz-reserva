@@ -15,7 +15,35 @@
   --color-emerald-800: #065f46;
   --color-emerald-900: #064e3b;
   --color-emerald-950: #022c22;
+
+  /* ---------------------------------------------------------------------
+   * Design System — radios. Ver DESIGN_SYSTEM.md.
+   * Escala moderada (Playtomic-style): nada por encima de 2xl.
+   * --------------------------------------------------------------------- */
+  --radius-lg: 0.5rem;   /* 8px  — chips, time-slots */
+  --radius-xl: 0.75rem;  /* 12px — botones, inputs, selects */
+  --radius-2xl: 1rem;    /* 16px — cards, contenedores */
+
+  /* ---------------------------------------------------------------------
+   * Design System — sombras. Sutiles y sin tinte de color (ver DESIGN_SYSTEM.md
+   * sección 5). La estructura la dan los bordes de 1px, no las sombras.
+   * --------------------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
 }
+
+/* -------------------------------------------------------------------------
+ * Design System — escalas que NO requieren tokens nuevos porque ya
+ * coinciden con la escala por defecto de Tailwind v4. Documentadas aqui
+ * para que ningun componente las redefina por su cuenta (ver DESIGN_SYSTEM.md):
+ *
+ *  Tipografia: text-xs/sm/base/lg/xl/2xl/3xl/4xl/5xl
+ *              font-normal/medium/semibold/bold  (NUNCA extrabold/black)
+ *  Espaciado:  escala base 4px (gap-6, p-6, py-20, px-5/8, etc.)
+ *  Iconos:     h-4 w-4 (16) inline · h-5 w-5 (20) UI · h-6 w-6 (24) destacado
+ *              contenedor-feature unico: h-12 w-12 rounded-2xl bg-emerald-50
+ * ------------------------------------------------------------------------- */
 
 /* Smooth scrolling */
 html {

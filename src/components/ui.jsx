@@ -1,11 +1,14 @@
+// Componentes base — ver DESIGN_SYSTEM.md. Ningun componente de pantalla debe
+// definir color/radio/sombra/tipografia por su cuenta: todo pasa por aqui.
+
 export function Button({ children, className = "", variant = "solid", ...props }) {
   const base =
-    "inline-flex items-center justify-center rounded-2xl px-5 py-3 font-bold transition-all duration-200 active:scale-[0.97] cursor-pointer select-none";
+    "inline-flex items-center justify-center rounded-xl h-11 px-5 text-sm font-semibold transition-all duration-150 ease-out active:scale-[0.99] cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40";
   const variants = {
-    solid: "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/20",
-    white: "bg-white text-emerald-700 hover:bg-emerald-50 hover:shadow-xl hover:shadow-white/20",
+    solid: "bg-emerald-600 text-white hover:bg-emerald-700",
+    white: "bg-white text-emerald-700 hover:bg-emerald-50",
     outline:
-      "border border-slate-300 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800",
+      "border border-slate-200 bg-transparent hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800",
     ghost: "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700",
   };
 
@@ -18,9 +21,9 @@ export function Button({ children, className = "", variant = "solid", ...props }
 
 export function Card({ children, className = "", hover = false, ...props }) {
   const base =
-    "rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden";
+    "rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 overflow-hidden";
   const hoverClass = hover
-    ? "transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-600/5"
+    ? "transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm dark:hover:border-slate-700"
     : "";
 
   return (
@@ -45,7 +48,7 @@ export function Badge({ children, className = "", variant = "default" }) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
         variants[variant] || variants.default
       } ${className}`}
     >
@@ -55,9 +58,24 @@ export function Badge({ children, className = "", variant = "default" }) {
 }
 
 export function SectionLabel({ children }) {
-  return <p className="font-bold text-emerald-600 text-sm tracking-wide uppercase">{children}</p>;
+  return <p className="font-semibold text-emerald-600 text-xs tracking-wider uppercase">{children}</p>;
 }
 
 export function SectionTitle({ children, className = "" }) {
-  return <h2 className={`text-3xl font-black md:text-4xl tracking-tight ${className}`}>{children}</h2>;
+  return <h2 className={`text-2xl font-bold md:text-3xl ${className}`}>{children}</h2>;
+}
+
+// Icon: wrapper minimo sobre lucide-react para que todo icono de la app pase
+// por un unico tamano estandar (16/20/24, ver DESIGN_SYSTEM.md seccion 6).
+// Todavia sin uso en pantallas — se adopta al migrar Hero/Filtros/Cards/Panel.
+const ICON_SIZES = { sm: "h-4 w-4", md: "h-5 w-5", lg: "h-6 w-6" };
+
+export function Icon({ icon: LucideIcon, size = "md", className = "", ...props }) {
+  return (
+    <LucideIcon
+      className={`${ICON_SIZES[size] || ICON_SIZES.md} ${className}`}
+      strokeWidth={1.75}
+      {...props}
+    />
+  );
 }
