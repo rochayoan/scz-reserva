@@ -105,7 +105,7 @@ function CourtForm({ court, venueId, orgId, onSave, onCancel }) {
   );
 }
 
-function VenueForm({ venue, onSave, onCancel }) {
+function VenueForm({ venue, orgId, onSave, onCancel }) {
   const [name, setName] = useState(venue?.name ?? "");
   const [zone, setZone] = useState(venue?.zone ?? "");
   const [description, setDescription] = useState(venue?.description ?? "");
@@ -114,7 +114,7 @@ function VenueForm({ venue, onSave, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await onSave(venue?.id ? { ...venue, name, zone, description } : { name, zone, description, organization_id: "00000000-0000-0000-0000-000000000001" });
+    await onSave(venue?.id ? { ...venue, name, zone, description } : { name, zone, description, organization_id: orgId });
     setSaving(false);
   };
 
@@ -263,6 +263,7 @@ export default function AdminCourts() {
       {showNewVenue && (
         <div className="mb-6">
           <VenueForm
+            orgId={orgId}
             onSave={handleSaveVenue}
             onCancel={() => setShowNewVenue(false)}
           />
@@ -331,6 +332,7 @@ export default function AdminCourts() {
                   <div className="border-b border-slate-100 p-6">
                     <VenueForm
                       venue={editingVenue}
+                      orgId={orgId}
                       onSave={handleSaveVenue}
                       onCancel={() => setEditingVenue(null)}
                     />
