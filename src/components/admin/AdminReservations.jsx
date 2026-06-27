@@ -248,11 +248,21 @@ export default function AdminReservations() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
+                          {r.status === "pending" && (
+                            <button
+                              onClick={() => handleAction(r.id, "confirmed")}
+                              disabled={actionLoading === r.id}
+                              className="group flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition-all duration-200 hover:bg-emerald-100 hover:shadow-sm disabled:opacity-50"
+                            >
+                              <CheckCircle className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110" />
+                              Confirmar
+                            </button>
+                          )}
                           {(r.status === "pending" || r.status === "confirmed") && (
                             <button
                               onClick={() => handleAction(r.id, "completed")}
                               disabled={actionLoading === r.id}
-                              className="group flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition-all duration-200 hover:bg-emerald-100 hover:shadow-sm disabled:opacity-50"
+                              className="group flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-all duration-200 hover:bg-blue-100 hover:shadow-sm disabled:opacity-50"
                             >
                               <CheckCircle className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110" />
                               Completar
