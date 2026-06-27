@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { RefreshCw, Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { RefreshCw, Save, ExternalLink, Clock } from "lucide-react";
 import { Card, CardContent, Button } from "../ui";
 import { useAuth } from "../../lib/AuthContext";
 import { getOrganization, updateOrganization } from "../../lib/adminSupabase";
 
 const PLANS = {
-  trial: { label: "Prueba", color: "bg-slate-100 text-slate-600" },
-  basic: { label: "Básico", color: "bg-blue-100 text-blue-700" },
-  pro: { label: "Pro", color: "bg-emerald-100 text-emerald-700" },
+  trial: { label: "Prueba gratuita", color: "bg-amber-100 text-amber-700" },
+  monthly: { label: "Mensual", color: "bg-emerald-100 text-emerald-700" },
 };
 
 const STATUSES = {
@@ -18,7 +18,8 @@ const STATUSES = {
 };
 
 export default function AdminSettings() {
-  const { orgId } = useAuth();
+  const { orgId, isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -49,6 +50,12 @@ export default function AdminSettings() {
     setSaving(false);
   };
 
+  // Calcula días restantes de trial
+  const trialEnd = org?.trial_ends_at ? new Date(org.trial_ends_at) : null;
+  const trialDaysLeft = trialEnd
+    ? Math.max(0, Math.floor((trialEnd - new Date()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -73,7 +80,7 @@ export default function AdminSettings() {
           <div className="space-y-4">
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-500">
-                Nombre
+                Nombre del complejo
               </label>
               <input
                 value={name}
@@ -83,9 +90,9 @@ export default function AdminSettings() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-500">
-                Slug
+                Identificador único
               </label>
-              <p className="h-11 flex items-center rounded-xl bg-slate-50 px-4 text-sm text-slate-500">
+              <p className="flex h-11 items-center rounded-xl bg-slate-50 px-4 text-sm text-slate-500 font-mono">
                 {org?.slug}
               </p>
             </div>
@@ -98,10 +105,10 @@ export default function AdminSettings() {
       </Card>
 
       {/* Subscription */}
-      <Card>
+      <Card className="mb-6">
         <CardContent className="p-6">
           <h3 className="mb-4 text-lg font-bold">Suscripción</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-3">
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-500">
                 Plan
@@ -129,9 +136,61 @@ export default function AdminSettings() {
                   org?.subscription_status}
               </span>
             </div>
+            {trialEnd && (
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-500">
+                  Prueba termina
+                </label>
+                <p className="flex items-center gap-1.5 text-sm text-slate-700">
+                  <Clock className="h-3.5 w-3.5 text-slate-400" />
+                  {trialEnd.toLocaleDateString("es-BO", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                  {trialDaysLeft > 0 && (
+                    <span className="text-xs text-amber-600 font-semibold">
+                      ({trialDaysLeft} días)
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
           </div>
+
+          {org?.subscription_status !== "active" && (
+            <div className="mt-6 flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3">
+              <span className="text-xs text-amber-800">
+                {org?.subscription_status === "trialing"
+                  ? `Te quedan ${trialDaysLeft} días de prueba. Activa tu suscripción para no perder el acceso.`
+                  : "Tu suscripción no está activa. Actívala para seguir usando el panel."}
+              </span>
+              <button
+                onClick={() => navigate("/admin/precios")}
+                className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+              >
+                Ver planes
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Super admin quick link */}
+      {isSuperAdmin && (
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-2 text-lg font-bold">Super Admin</h3>
+            <p className="mb-4 text-sm text-slate-500">
+              Gestiona las suscripciones de todos los complejos
+            </p>
+            <Button onClick={() => navigate("/admin/super")}>
+              <ExternalLink className="mr-1.5 h-4 w-4" />
+              Ir al panel Super Admin
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

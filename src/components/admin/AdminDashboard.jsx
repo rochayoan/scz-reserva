@@ -234,21 +234,54 @@ export default function AdminDashboard() {
           <Card>
             <CardContent className="p-5">
               <h3 className="mb-3 text-base font-bold text-slate-800">Canchas ahora</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {["Cancha 1", "Cancha 2", "Cancha 3", "Cancha 4"].map((name, i) => (
-                  <div key={name} className={`rounded-xl border p-3 text-center transition-all ${
-                    i === 0 || i === 2 ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"
-                  }`}>
-                    <p className="text-xs font-semibold text-slate-600">{name}</p>
-                    <p className={`mt-1 text-[11px] font-semibold ${i === 0 || i === 2 ? "text-emerald-600" : "text-slate-400"}`}>
-                      {i === 0 || i === 2 ? "🟢 Ocupada" : "🟢 Disponible"}
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-slate-400">
-                      {i === 0 ? "hasta 18:00" : i === 2 ? "hasta 17:30" : "libre"}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              {kpis?.totalCourts === 0 ? (
+                <p className="py-4 text-center text-sm text-slate-400">Sin canchas registradas</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {recent.length === 0 ? (
+                    <div className="col-span-2 py-4 text-center text-sm text-slate-400">
+                      Sin actividad ahora
+                    </div>
+                  ) : (
+                    Array.from(
+                      new Map(
+                        recent
+                          .filter((r) => ["confirmed", "pending"].includes(r.status))
+                          .map((r) => [r.court_name, r])
+                      ).entries()
+                    )
+                      .slice(0, 6)
+                      .map(([name, r]) => (
+                        <div
+                          key={r.id}
+                          className={`rounded-xl border p-3 text-center transition-all ${
+                            r.status === "confirmed"
+                              ? "border-emerald-200 bg-emerald-50"
+                              : "border-amber-200 bg-amber-50"
+                          }`}
+                        >
+                          <p className="text-xs font-semibold text-slate-600 truncate">{name}</p>
+                          <p className={`mt-1 text-[11px] font-semibold ${
+                            r.status === "confirmed" ? "text-emerald-600" : "text-amber-600"
+                          }`}>
+                            {r.status === "confirmed" ? "🔴 Ocupada" : "🟡 Pendiente"}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-slate-400">
+                            {new Date(r.starts_at).toLocaleTimeString("es-BO", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {" — "}
+                            {new Date(r.ends_at).toLocaleTimeString("es-BO", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                      ))
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
