@@ -2,7 +2,7 @@
 
 > Documento de control del proyecto. Lo mantiene el rol **Tech Lead + Product Designer**.
 > Se actualiza al cierre de cada tarea. Fuente de verdad de "dónde estamos".
-> Última actualización: 2026-06-26 (cierre F3).
+> Última actualización: 2026-06-26 (cierre F4).
 
 ---
 
@@ -12,14 +12,14 @@
 |---|---|---|
 | Infraestructura (Supabase, migraciones, RLS, anti-doble-reserva) | 100% | Esquema completo y verificado. |
 | Base de datos | 100% | 7 tablas + RLS + GiST anti-solape. |
-| Frontend (estructura, componentes, data layer) | 97% | Hero + Canchas + Marketing + Booking + Admin ya en Design System. |
-| Design System | 95% | Todas las pantallas migradas; falta pasada de mobile (F4) y color (F5). |
+| Frontend (estructura, componentes, data layer) | 98% | Hero + Canchas + Marketing + Booking + Admin + Header/Footer ya en Design System. |
+| Design System | 98% | Toda la app (incluyendo layout) migrada y auditada en mobile; solo falta el pase de color (F5). |
 | Backend propio | N/A | Decisión: sin backend, Supabase cumple ese rol. |
 | Reservas reales | 0% | `BookingFlow` sigue simulado con `setTimeout` (solo visual migrado). |
 | Autenticación | 0% | Pendiente Fase I. |
 | Panel propietario | 35% | UI ya en el DS, pero sigue leyendo datos mock sin filtrar por organización real. |
 | Deploy | 20% | Proyecto Vercel vinculado, sin deploy de versión actual. |
-| Demo comercial | 97% | Falta pasada de mobile y ajuste de color. |
+| Demo comercial | 98% | Solo falta el ajuste de color que lidera el usuario (F5). |
 
 ---
 
@@ -54,6 +54,7 @@ Sub-áreas de la fase: Marketing · Admin · Booking · Mobile · Ajustes visual
 - ✅ **F1 — 5 secciones de marketing migradas al DS** (ProblemSection, SolutionSection, HowItWorks, BenefitsSection, CTASection): emoji → iconos lucide, `font-black` → `font-bold`, fix de bug de animación escalonada, `CTASection` con `rounded-3xl` y botones sin override de radio — commit `a809d07`.
 - ✅ **F2 — `BookingFlow.jsx` migrado al DS**: emoji/SVG manual → lucide (`MapPin`, `Star`, `Check`, `QrCode`, `CheckCircle2`), `font-black` → `font-bold`/`semibold`, horarios y botón confirmar al radio/borde del DS, se quitó `animate-pulse-glow`. Lógica de `bookingStep`/`bookingDone`/`handleConfirm`/timers intacta — commit `c63adee`.
 - ✅ **F3 — `AdminPanel.jsx` migrado al DS**: emoji → lucide (`Wallet`, `CalendarCheck`, `Gauge`, `Inbox`, `ArrowRight`), KPI cards y tabla sin overrides de sombra/borde (usan `Card` del DS), cabecera de tabla estilo "SaaS" (`uppercase tracking-wider`), badges de pago/estado con punto de color, barra de progreso ahora lee un valor explícito en vez de comparar por texto del label. `getAdminReservations()` y sus datos intactos — commit `f5552e7`.
+- ✅ **F4 — Auditoría mobile + Header/Footer al DS**: fade de scroll horizontal en la tabla del Panel, tap targets de `SegmentedControl` y horarios de `BookingFlow` subidos a 44px mínimo, stats del Hero a `grid-cols-3` para que no queden desbalanceados en mobile, Header/Footer con emoji → lucide (`Goal`, `Moon`, `Sun`, `Menu`, `X`, `Heart`) y `font-black` → `font-bold`. Lógica de dark mode y menú mobile intacta — commit `d43e6b2`.
 
 ---
 
@@ -64,21 +65,19 @@ Sub-áreas de la fase: Marketing · Admin · Booking · Mobile · Ajustes visual
 | F1 | ✅ ~~Migrar 5 secciones de marketing al DS~~ | Marketing | 2–3h | — |
 | F2 | ✅ ~~Migrar `BookingFlow.jsx` al DS~~ | Booking | 2h | F1 |
 | F3 | ✅ ~~Migrar `AdminPanel.jsx` al DS~~ | Admin | 2h | F1 |
-| **F4** | Pasada responsive/mobile sobre todas las secciones ya migradas | Mobile | 2h | F1, F2, F3 |
+| F4 | ✅ ~~Auditoría responsive/mobile + Header/Footer al DS~~ | Mobile | 2h | F1, F2, F3 |
 | **F5** | Ajustes visuales / pase de color (lo lidera el usuario) | Ajustes visuales | 1–2h | F1–F4 |
 
 ---
 
 ## 6. Próxima tarea recomendada
 
-**F4 — Pasada responsive/mobile sobre todas las secciones ya migradas.**
+**F5 — Ajustes visuales / pase de color (liderado por el usuario).**
 
-**Por qué F4 sigue:**
-1. **Todas las pantallas ya están en el Design System** (Hero, Canchas, Marketing, Booking, Admin) — ya no quedan emoji ni `font-black` en ningún componente de producto. Es el momento correcto para auditar mobile una sola vez, en vez de revisarlo pantalla por pantalla durante cada migración.
-2. Es puramente de verificación/ajuste fino (paddings, breakpoints, tamaños táctiles) — bajo riesgo, sin tocar lógica.
-3. Deja el terreno limpio para que F5 (tu pase de color) sea el único cambio pendiente antes de Fase G (Deploy Demo).
-
-**Por qué F5 (color) sigue al final:** con todo ya migrado a tokens del DS, tu cambio de color es una edición centralizada en `index.css`/`ui.jsx`, no archivo por archivo.
+**Por qué F5 es lo único que queda en Fase F:**
+1. **Toda la app está migrada y auditada en mobile** — Hero, Canchas, Marketing, Booking, Admin, Header y Footer. Cero emoji, cero `font-black`, tap targets a 44px, sin scroll horizontal sin avisar.
+2. Con todo apoyado en tokens del DS (`index.css`/`ui.jsx`), tu cambio de color es una edición centralizada que se propaga a toda la app — exactamente la razón por la que se dejó al final.
+3. Tras F5, Fase F queda cerrada por completo y el proyecto puede avanzar a **Fase G — Deploy Demo** (requiere tu aprobación explícita para avanzar de fase).
 
 ---
 
@@ -95,6 +94,7 @@ Sub-áreas de la fase: Marketing · Admin · Booking · Mobile · Ajustes visual
 
 | Hash | Mensaje |
 |---|---|
+| `d43e6b2` | polish: mobile audit fixes and header/footer design system cleanup |
 | `f5552e7` | polish: migrate admin panel to design system |
 | `c63adee` | polish: migrate booking flow to design system |
 | `a809d07` | polish: migrate marketing sections to design system |
