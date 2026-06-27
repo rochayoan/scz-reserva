@@ -87,6 +87,7 @@ export function AuthProvider({ children }) {
         orgName,
         subscriptionStatus,
         trialEndsAt,
+        isSuperAdmin: session?.user?.email === "rochayoan40@gmail.com",
         login,
         logout,
         fetchOrg,

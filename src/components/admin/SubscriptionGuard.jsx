@@ -8,7 +8,7 @@ import { Clock, AlertTriangle } from "lucide-react";
  * Si no, redirige a /admin/precios.
  */
 export default function SubscriptionGuard({ children }) {
-  const { user, subscriptionStatus, trialEndsAt, loading } = useAuth();
+  const { user, subscriptionStatus, trialEndsAt, loading, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
@@ -23,6 +23,9 @@ export default function SubscriptionGuard({ children }) {
     navigate("/admin/login", { replace: true });
     return null;
   }
+
+  // Super admin siempre puede acceder
+  if (isSuperAdmin) return children;
 
   // Calcular días restantes de prueba
   const trialDaysLeft = trialEndsAt

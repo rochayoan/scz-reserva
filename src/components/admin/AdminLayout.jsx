@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -23,7 +24,7 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, isSuperAdmin } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const SidebarContent = ({ mobile = false }) => (
@@ -61,6 +62,27 @@ export default function AdminLayout() {
             {item.label}
           </NavLink>
         ))}
+
+        {/* Super admin link */}
+        {isSuperAdmin && (
+          <>
+            <div className="my-2 border-t border-slate-100" />
+            <NavLink
+              to="/admin/super"
+              onClick={() => mobile && setMobileOpen(false)}
+              className={({ isActive }) =>
+                `group flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                  isActive
+                    ? "bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-sm shadow-amber-300/20"
+                    : "text-slate-500 hover:bg-amber-50 hover:text-amber-700"
+                }`
+              }
+            >
+              <ShieldCheck className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" strokeWidth={1.75} />
+              Super Admin
+            </NavLink>
+          </>
+        )}
       </nav>
 
       {/* Bottom */}

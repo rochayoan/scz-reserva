@@ -22,6 +22,7 @@ import AdminSettings from "./components/admin/AdminSettings";
 import LoginPage from "./components/admin/LoginPage";
 import RegisterPage from "./components/admin/RegisterPage";
 import PricingPage from "./components/admin/PricingPage";
+import SuperAdminPage from "./components/admin/SuperAdminPage";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import SubscriptionGuard from "./components/admin/SubscriptionGuard";
 
@@ -175,6 +176,11 @@ export default function App() {
             <Route path="horarios" element={<AdminSchedule />} />
             <Route path="configuracion" element={<AdminSettings />} />
           </Route>
+          <Route path="/admin/super" element={
+            <ProtectedRoute>
+              <SuperAdminPage />
+            </ProtectedRoute>
+          } />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
