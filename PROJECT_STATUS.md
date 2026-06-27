@@ -2,7 +2,7 @@
 
 > Documento de control del proyecto. Lo mantiene el rol **Tech Lead + Product Designer**.
 > Se actualiza al cierre de cada tarea. Fuente de verdad de "dónde estamos".
-> Última actualización: 2026-06-26 (cierre F5 — Fase F completa).
+> Última actualización: 2026-06-27 (cierre Fase G — Deploy Demo).
 
 ---
 
@@ -18,18 +18,18 @@
 | Reservas reales | 0% | `BookingFlow` sigue simulado con `setTimeout` (solo visual migrado). |
 | Autenticación | 0% | Pendiente Fase I. |
 | Panel propietario | 35% | UI ya en el DS, pero sigue leyendo datos mock sin filtrar por organización real. |
-| Deploy | 20% | Proyecto Vercel vinculado, sin deploy de versión actual. |
-| Demo comercial | 100% (visual) | Lista para presentación; pendiente solo Fase G (deploy) y fases funcionales (H–K). |
+| Deploy | 100% | En producción: https://scz-reserva.vercel.app — env vars de Supabase configuradas, datos reales confirmados. |
+| Demo comercial | 100% | Lista para presentación y compartir con colegas/clientes. Pendiente: fases funcionales (H–K). |
 
 ---
 
 ## 2. Fase actual
 
-**Fase F — Pulido UX/UI: ✅ COMPLETA.**
+**Fase G — Deploy Demo: ✅ COMPLETA.**
 
-Sub-áreas de la fase: Marketing · Admin · Booking · Mobile · Ajustes visuales — las 5 cerradas.
+Demo pública en: **https://scz-reserva.vercel.app**
 
-A la espera de aprobación del usuario para avanzar a **Fase G — Deploy Demo**.
+A la espera de aprobación del usuario para avanzar a **Fase H — Reservas reales**.
 
 ---
 
@@ -37,8 +37,8 @@ A la espera de aprobación del usuario para avanzar a **Fase G — Deploy Demo**
 
 | Fase | Nombre | Estado |
 |---|---|---|
-| **F** | **Pulido UX/UI** | ✅ Completa |
-| G | Deploy Demo | ⬜ Pendiente |
+| F | Pulido UX/UI | ✅ Completa |
+| **G** | **Deploy Demo** | ✅ Completa |
 | H | Reservas reales | ⬜ Pendiente |
 | I | Autenticación | ⬜ Pendiente |
 | J | Panel propietario | ⬜ Pendiente |
@@ -61,26 +61,27 @@ A la espera de aprobación del usuario para avanzar a **Fase G — Deploy Demo**
 
 ---
 
-## 5. Tareas pendientes (Fase F) — desglose
+## 5. Tareas completadas (Fase G)
 
-| ID | Tarea | Sub-área | Estimación | Depende de |
-|---|---|---|---|---|
-| F1 | ✅ ~~Migrar 5 secciones de marketing al DS~~ | Marketing | 2–3h | — |
-| F2 | ✅ ~~Migrar `BookingFlow.jsx` al DS~~ | Booking | 2h | F1 |
-| F3 | ✅ ~~Migrar `AdminPanel.jsx` al DS~~ | Admin | 2h | F1 |
-| F4 | ✅ ~~Auditoría responsive/mobile + Header/Footer al DS~~ | Mobile | 2h | F1, F2, F3 |
-| F5 | ✅ ~~Pase final de color, contraste y limpieza CSS~~ | Ajustes visuales | 1–2h | F1–F4 |
+- ✅ Configuradas en Vercel (solo **Production**) las 2 env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (mismos valores que `.env.local`, encriptadas).
+- ✅ Build/lint verificados antes de desplegar.
+- ✅ **Deploy a producción**: https://scz-reserva.vercel.app — primero con `vercel build --prebuilt` (build local), corregido a build remoto estándar (`vercel deploy --prod`) tras detectar que el build local NO inyectaba las env vars en el bundle.
+- ✅ Verificado con datos reales de Supabase (nombres sin tilde en venues coinciden exactamente con la tabla real, no con el mock de `data.js`).
+- ✅ Verificación visual completa: Hero, Canchas, BookingFlow, AdminPanel, dark mode, mobile — todo correcto en producción.
+- ✅ Confirmado `.env.local` sigue ignorado y nunca trackeado.
 
 ---
 
 ## 6. Próxima tarea recomendada
 
-**Fase G — Deploy Demo** (pendiente de tu aprobación para iniciar).
+**Fase H — Reservas reales** (pendiente de tu aprobación para iniciar).
 
-**Por qué Fase G es lo siguiente:**
-1. **Fase F está 100% completa**: Design System migrado en las 5 sub-áreas (Marketing, Booking, Admin, Mobile, Color/Contraste). Cero emoji, cero `font-black`, tap targets ≥44px, contraste WCAG AA verificado con axe-core (76 violaciones → 2 intencionales y decorativas).
-2. El proyecto ya tiene un proyecto Vercel vinculado (`prj_p2N3mLPr3iaBjfOGK1QndmRCASAx`) pero sin deploy de la versión actual ni env vars de Supabase configuradas ahí — es trabajo de infraestructura, no de diseño.
-3. Antes de avanzar, según tus reglas, debo presentar el plan de Fase G (archivos/pasos) y esperar tu aprobación explícita — no se avanza de fase sin ese visto bueno.
+**Por qué Fase H es lo siguiente:**
+1. **Fase G está completa**: la demo vive en una URL pública y estable, lista para compartir con colegas/clientes/inversionistas, mostrando datos reales de Supabase.
+2. El siguiente salto funcional natural es que `BookingFlow.jsx` deje de simular con `setTimeout` y escriba una reserva real en la tabla `reservations` (ya protegida por la regla anti-doble-reserva vía GiST).
+3. Antes de avanzar, según tus reglas, debo presentar el plan de Fase H (archivos/pasos) y esperar tu aprobación explícita.
+
+**Hallazgo importante documentado de este deploy (para futuros redeploys):** `vercel build --prebuilt` ejecutado localmente **no inyecta** las env vars de Vercel en el bundle de Vite — usar siempre `vercel deploy --prod` (build remoto) para que las env vars de Production se incluyan correctamente.
 
 ---
 
@@ -89,7 +90,7 @@ A la espera de aprobación del usuario para avanzar a **Fase G — Deploy Demo**
 - 2 elementos de chrome decorativo en `HeroPreview.jsx` (barra de URL falsa y placeholder de búsqueda del mockup) quedan por debajo de AA (2.63:1) a propósito — son ilustrativos, no contenido real.
 - `BookingFlow.jsx` simula la reserva con `setTimeout` (no es deuda de F, es alcance de Fase H — reservas reales).
 - `AdminPanel.jsx` lee datos mock, sin filtrar por organización real (Fase J).
-- Deploy: env vars de Supabase aún no configuradas en Vercel (Fase G).
+- **Gotcha de deploy documentado**: `vercel build --prebuilt` local no inyecta env vars de Vercel en el bundle de Vite (a diferencia de un build local con `.env.local`, que sí funciona). Usar siempre `vercel deploy --prod` (build remoto) para producción.
 
 ---
 
