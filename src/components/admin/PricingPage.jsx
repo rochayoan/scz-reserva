@@ -139,19 +139,19 @@ export default function PricingPage() {
             <div className="space-y-4 rounded-2xl bg-slate-50 p-5">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500">Banco</span>
-                <span className="text-sm font-bold text-slate-800">Banco Nacional de Bolivia</span>
+                <span className="text-sm font-bold text-slate-800">Banco Económico</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500">Titular</span>
-                <span className="text-sm font-bold text-slate-800">Yoan Ferrufino</span>
+                <span className="text-sm font-bold text-slate-800">Yoan Marc Rocha Ferrufino</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500">N° de Cuenta</span>
-                <span className="text-sm font-bold text-slate-800">••• pondrás tus datos •••</span>
+                <span className="text-sm font-bold text-slate-800">1011068463</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500">CI / NIT</span>
-                <span className="text-sm font-bold text-slate-800">••• tus datos •••</span>
+                <span className="text-sm font-bold text-slate-800">13500829</span>
               </div>
               <div className="border-t border-slate-200 pt-4">
                 <div className="flex items-center justify-between">
