@@ -87,47 +87,47 @@ export const stats = [
 ];
 
 export const benefitsUser = [
-  { icon: "🔎", text: "Busca por deporte, zona y horario" },
-  { icon: "💰", text: "Compara precios antes de reservar" },
-  { icon: "⚡", text: "Confirma tu cancha en segundos" },
-  { icon: "💳", text: "Paga por QR y evita perder tu turno" },
+  { icon: "Search", text: "Busca por deporte, zona y horario" },
+  { icon: "Tag", text: "Compara precios antes de reservar" },
+  { icon: "Zap", text: "Confirma tu cancha en segundos" },
+  { icon: "CreditCard", text: "Paga por QR y evita perder tu turno" },
 ];
 
 export const benefitsOwner = [
-  { icon: "📋", text: "Evita doble reserva y desorden" },
-  { icon: "🖥️", text: "Administra horarios desde un panel web" },
-  { icon: "📉", text: "Reduce cancelaciones de último minuto" },
-  { icon: "📈", text: "Aumenta visibilidad en Santa Cruz" },
+  { icon: "ClipboardCheck", text: "Evita doble reserva y desorden" },
+  { icon: "MonitorSmartphone", text: "Administra horarios desde un panel web" },
+  { icon: "TrendingDown", text: "Reduce cancelaciones de último minuto" },
+  { icon: "TrendingUp", text: "Aumenta visibilidad en Santa Cruz" },
 ];
 
 export const problems = [
   {
-    icon: "📱",
+    icon: "Smartphone",
     title: "Reservas por WhatsApp",
     text: "Coordinar canchas por mensajes genera confusión, doble reserva y pérdida de clientes.",
   },
   {
-    icon: "⏱️",
+    icon: "Clock",
     title: "Pérdida de tiempo",
     text: "Llamar, esperar confirmación y preguntar por disponibilidad es lento e ineficiente.",
   },
   {
-    icon: "📊",
+    icon: "BarChart3",
     title: "Desorganización total",
     text: "Sin un sistema centralizado, los complejos pierden ingresos y los jugadores pierden turnos.",
   },
   {
-    icon: "🔄",
+    icon: "CalendarX2",
     title: "Doble reserva",
     text: "Dos equipos para el mismo horario. Sin sistema digital, los conflictos son constantes.",
   },
 ];
 
 export const steps = [
-  { icon: "🔎", title: "Busca", text: "Elige deporte, zona y fecha." },
-  { icon: "⏱️", title: "Selecciona", text: "Revisa horarios disponibles en tiempo real." },
-  { icon: "💳", title: "Paga", text: "Confirma con QR digital al instante." },
-  { icon: "⚽", title: "Juega", text: "Llega a la cancha y disfruta tu partido." },
+  { icon: "Search", title: "Busca", text: "Elige deporte, zona y fecha." },
+  { icon: "Clock", title: "Selecciona", text: "Revisa horarios disponibles en tiempo real." },
+  { icon: "CreditCard", title: "Paga", text: "Confirma con QR digital al instante." },
+  { icon: "Goal", title: "Juega", text: "Llega a la cancha y disfruta tu partido." },
 ];
 
 export const adminReservations = [
