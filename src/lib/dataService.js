@@ -62,6 +62,7 @@ function mapVenueToCourtCard(venue) {
     image: venue.image_url ?? "",
     times: generateTimesForCourt(repCourt),
     featured: false,
+    organization_id: venue.organization_id,
   };
 }
 
@@ -70,8 +71,8 @@ async function fetchVenuesAsCourts() {
     .from("venues")
     .select(
       `
-      id, name, zone, image_url, rating,
-      courts (
+    id, name, zone, image_url, rating, organization_id,
+    courts (
         id, sport, category, price_per_hour,
         court_operating_hours ( day_of_week, open_time, close_time )
       )

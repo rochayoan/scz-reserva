@@ -3,8 +3,6 @@ import { supabase } from "../../lib/supabaseClient";
 import { MapPin, Star, Check, QrCode, CheckCircle2, User, Phone } from "lucide-react";
 import { Card, CardContent, Button, SectionLabel, SectionTitle } from "../ui";
 
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000001";
-
 function buildSlots(startHour, endHour) {
   const slots = [];
   for (let h = startHour; h < endHour; h++) {
@@ -57,7 +55,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
       }
 
       const { error: insertError } = await supabase.from("reservations").insert({
-        organization_id: DEMO_ORG_ID,
+        organization_id: court.organization_id,
         venue_id: court.id,
         court_id: matchingCourt.id,
         guest_name: guestName.trim(),

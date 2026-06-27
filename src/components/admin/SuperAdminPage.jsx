@@ -4,6 +4,8 @@ import { useAuth } from "../../lib/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
 import { CheckCircle, XCircle, Clock, Search, ArrowLeft } from "lucide-react";
 
+const API_BASE = import.meta.env.DEV ? "" : "";
+
 export default function SuperAdminPage() {
   const { user, isSuperAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -23,15 +25,16 @@ export default function SuperAdminPage() {
 
   const loadOrgs = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("organizations")
-      .select("id, name, slug, subscription_plan, subscription_status, trial_ends_at, created_at, stripe_customer_id")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      setMessage("Error al cargar: " + error.message);
-    } else {
-      setOrgs(data || []);
+    try {
+      const res = await fetch("/api/superadmin/orgs");
+      const json = await res.json();
+      if (json.error) {
+        setMessage("Error: " + json.error);
+      } else {
+        setOrgs(json.data || []);
+      }
+    } catch (err) {
+      setMessage("Error de conexión: " + err.message);
     }
     setLoading(false);
   };
