@@ -219,6 +219,7 @@ export async function createOrganizationForUser(userId, fullName, orgName) {
     .replace(/^-|-$/g, "");
 
   // 1. Create organization
+  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
   const { data: org, error: orgErr } = await supabase
     .from("organizations")
     .insert({
@@ -226,6 +227,7 @@ export async function createOrganizationForUser(userId, fullName, orgName) {
       slug: slug + "-" + Date.now().toString(36),
       subscription_plan: "trial",
       subscription_status: "trialing",
+      trial_ends_at: trialEndsAt,
       created_at: now,
       updated_at: now,
     })

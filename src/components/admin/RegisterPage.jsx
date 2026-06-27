@@ -54,7 +54,7 @@ export default function RegisterPage() {
       await fetchOrg(authData.user.id);
 
       setSuccess(true);
-      setTimeout(() => navigate("/admin"), 1500);
+      setTimeout(() => navigate("/admin/precios"), 1500);
     } catch (err) {
       setError("Error inesperado. Intenta de nuevo.");
     }

@@ -8,26 +8,34 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [orgId, setOrgId] = useState(null);
   const [orgName, setOrgName] = useState(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [trialEndsAt, setTrialEndsAt] = useState(null);
 
   // Fetch the organization for a user from memberships
   const fetchOrg = useCallback(async (userId) => {
     if (!userId) {
       setOrgId(null);
       setOrgName(null);
+      setSubscriptionStatus(null);
+      setTrialEndsAt(null);
       return;
     }
     const { data: membership } = await supabase
       .from("memberships")
-      .select("organization_id, organizations(name)")
+      .select("organization_id, organizations(name, subscription_status, trial_ends_at)")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (membership) {
       setOrgId(membership.organization_id);
       setOrgName(membership.organizations?.name ?? "Mi Complejo");
+      setSubscriptionStatus(membership.organizations?.subscription_status ?? null);
+      setTrialEndsAt(membership.organizations?.trial_ends_at ?? null);
     } else {
       setOrgId(null);
       setOrgName(null);
+      setSubscriptionStatus(null);
+      setTrialEndsAt(null);
     }
   }, []);
 
@@ -77,6 +85,8 @@ export function AuthProvider({ children }) {
         loading,
         orgId,
         orgName,
+        subscriptionStatus,
+        trialEndsAt,
         login,
         logout,
         fetchOrg,

@@ -21,7 +21,9 @@ import AdminSchedule from "./components/admin/AdminSchedule";
 import AdminSettings from "./components/admin/AdminSettings";
 import LoginPage from "./components/admin/LoginPage";
 import RegisterPage from "./components/admin/RegisterPage";
+import PricingPage from "./components/admin/PricingPage";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
+import SubscriptionGuard from "./components/admin/SubscriptionGuard";
 
 function LandingPage() {
   const [courts, setCourts] = useState([]);
@@ -156,11 +158,14 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
           <Route path="/admin/registro" element={<RegisterPage />} />
+          <Route path="/admin/precios" element={<PricingPage />} />
           <Route
             path="/admin"
             element={
               <ProtectedRoute>
-                <AdminLayout />
+                <SubscriptionGuard>
+                  <AdminLayout />
+                </SubscriptionGuard>
               </ProtectedRoute>
             }
           >
