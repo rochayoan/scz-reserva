@@ -94,8 +94,9 @@ export default function AdminPanel() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px] text-left text-sm">
+              <div className="relative">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[700px] text-left text-sm">
                   <thead className="border-b border-slate-100 dark:border-slate-800">
                     <tr>
                       <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -144,7 +145,9 @@ export default function AdminPanel() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
+                <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white to-transparent dark:from-slate-900 md:hidden" />
               </div>
             )}
           </CardContent>

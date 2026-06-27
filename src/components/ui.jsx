@@ -78,7 +78,7 @@ export function SegmentedControl({ options, value, onChange, className = "" }) {
           key={opt}
           type="button"
           onClick={() => onChange(opt)}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-150 ease-out cursor-pointer ${
+          className={`flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold whitespace-nowrap transition-all duration-150 ease-out cursor-pointer ${
             value === opt
               ? "bg-emerald-600 text-white"
               : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"

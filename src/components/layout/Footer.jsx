@@ -1,3 +1,4 @@
+import { Goal, Heart } from "lucide-react";
 import { Button } from "../ui";
 
 export default function Footer() {
@@ -15,10 +16,10 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-600/25">
-                <span>⚽</span>
+                <Goal className="h-5 w-5" strokeWidth={2} />
               </div>
               <div>
-                <p className="text-lg font-black tracking-tight">SCZ-RESERVA</p>
+                <p className="text-lg font-bold tracking-tight">SCZ-RESERVA</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Reservas deportivas</p>
               </div>
             </div>
@@ -60,8 +61,8 @@ export default function Footer() {
           <p className="text-sm text-slate-500 dark:text-slate-400">
             © 2026 SCZ-RESERVA — Plataforma de reservas deportivas.
           </p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">
-            Hecho con 💚 en Santa Cruz de la Sierra
+          <p className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+            Hecho con <Heart className="h-3.5 w-3.5 fill-emerald-500 text-emerald-500" strokeWidth={0} /> en Santa Cruz de la Sierra
           </p>
         </div>
       </div>

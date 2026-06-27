@@ -63,7 +63,7 @@ export default function Hero({ onSearch }) {
           </div>
 
           {/* Stats — elemento de confianza, tenue */}
-          <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 border-t border-slate-100 pt-6 dark:border-slate-800">
+          <div className="mt-10 grid grid-cols-3 gap-4 border-t border-slate-100 pt-6 dark:border-slate-800">
             {stats.map((item) => (
               <div key={item.label}>
                 <p className="text-xl font-semibold tabular-nums text-slate-900 dark:text-white">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Goal, Moon, Sun, Menu, X } from "lucide-react";
 import { Button } from "../ui";
 
 export default function Header({ dark, setDark }) {
@@ -18,10 +19,10 @@ export default function Header({ dark, setDark }) {
         {/* Logo */}
         <a href="#inicio" className="flex items-center gap-3 group">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-600/25 transition-transform group-hover:scale-105">
-            <span className="text-lg">⚽</span>
+            <Goal className="h-5 w-5" strokeWidth={2} />
           </div>
           <div>
-            <p className="text-xl font-black tracking-tight leading-tight">SCZ-RESERVA</p>
+            <p className="text-xl font-bold tracking-tight leading-tight">SCZ-RESERVA</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Reservas deportivas</p>
           </div>
         </a>
@@ -52,12 +53,16 @@ export default function Header({ dark, setDark }) {
                 dark ? "translate-x-[1.5rem]" : "translate-x-0"
               }`}
             >
-              {dark ? "🌙" : "☀️"}
+              {dark ? (
+                <Moon className="h-4 w-4 text-slate-200" strokeWidth={1.75} />
+              ) : (
+                <Sun className="h-4 w-4 text-amber-500" strokeWidth={1.75} />
+              )}
             </span>
           </button>
 
           {/* Login Button */}
-          <Button variant="ghost" className="hidden md:inline-flex rounded-2xl text-sm">
+          <Button variant="ghost" className="hidden md:inline-flex text-sm">
             Iniciar sesión
           </Button>
 
@@ -67,13 +72,11 @@ export default function Header({ dark, setDark }) {
             className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden cursor-pointer"
             aria-label="Abrir menú"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              {mobileOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              )}
-            </svg>
+            {mobileOpen ? (
+              <X className="h-6 w-6" strokeWidth={2} />
+            ) : (
+              <Menu className="h-6 w-6" strokeWidth={2} />
+            )}
           </button>
         </div>
       </div>
@@ -92,7 +95,7 @@ export default function Header({ dark, setDark }) {
                 {link.label}
               </a>
             ))}
-            <Button variant="ghost" className="mt-2 w-full rounded-2xl text-sm">
+            <Button variant="ghost" className="mt-2 w-full text-sm">
               Iniciar sesión
             </Button>
           </nav>

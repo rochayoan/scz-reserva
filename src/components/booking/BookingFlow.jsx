@@ -69,7 +69,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                             setBookingStep(1);
                             setBookingDone(false);
                           }}
-                          className={`cursor-pointer rounded-xl border px-5 py-2.5 text-sm font-semibold transition-colors ${
+                          className={`flex h-11 cursor-pointer items-center justify-center rounded-xl border px-5 text-sm font-semibold transition-colors ${
                             selectedTime === time
                               ? "border-emerald-600 bg-emerald-600 text-white"
                               : "border-slate-200 hover:border-emerald-400 dark:border-slate-700 dark:hover:border-emerald-500"
