@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../lib/AuthContext";
 
 export default function LoginPage() {
@@ -86,7 +86,8 @@ export default function LoginPage() {
           </button>
 
           <p className="mt-4 text-center text-xs text-slate-400">
-            ¿No tienes cuenta aún? Crea una desde el panel.
+            ¿No tienes cuenta?{" "}
+            <Link to="/admin/registro" className="font-semibold text-emerald-700 hover:underline">Regístrate</Link>
           </p>
         </form>
       </div>

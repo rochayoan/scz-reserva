@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "../ui";
+import { useAuth } from "../../lib/AuthContext";
 import { getScheduleData } from "../../lib/adminSupabase";
 
 const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -23,13 +24,14 @@ const COURT_COLORS = [
 ];
 
 export default function AdminSchedule() {
+  const { orgId } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
 
   const load = async () => {
     setLoading(true);
-    const d = await getScheduleData();
+    const d = await getScheduleData(orgId);
     setData(d);
     setLoading(false);
   };

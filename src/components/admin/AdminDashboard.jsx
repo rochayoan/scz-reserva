@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Wallet, CalendarCheck, Gauge, Building2, RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent } from "../ui";
+import { useAuth } from "../../lib/AuthContext";
 import { getDashboardKPIs, getAdminReservations } from "../../lib/adminSupabase";
 
 function TrendBadge({ value }) {
@@ -39,6 +40,7 @@ function StatusBadge({ status }) {
 }
 
 export default function AdminDashboard() {
+  const { orgId } = useAuth();
   const [kpis, setKpis] = useState(null);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,8 +48,8 @@ export default function AdminDashboard() {
   const load = async () => {
     setLoading(true);
     const [k, r] = await Promise.all([
-      getDashboardKPIs(),
-      getAdminReservations(),
+      getDashboardKPIs(orgId),
+      getAdminReservations(orgId),
     ]);
     setKpis(k);
     setRecent(r.slice(0, 6));
@@ -101,18 +103,14 @@ export default function AdminDashboard() {
     },
   ];
 
-  // Get upcoming reservations (today/tomorrow)
   const upcoming = recent.filter((r) => r.status === "confirmed" || r.status === "pending").slice(0, 4);
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-800">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Resumen de tu complejo deportivo
-          </p>
+          <p className="mt-1 text-sm text-slate-500">Resumen de tu complejo deportivo</p>
         </div>
         <button
           onClick={load}
@@ -123,27 +121,17 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {kpiCards.map((kpi) => {
           const KpiIcon = kpi.icon;
           return (
-            <div
-              key={kpi.label}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md"
-            >
-              {/* Hover gradient accent */}
+            <div key={kpi.label} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md">
               <div className="absolute inset-0 -z-10 bg-gradient-to-br from-transparent via-transparent to-emerald-50/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-500">
-                    {kpi.label}
-                  </p>
+                  <p className="text-sm font-medium text-slate-500">{kpi.label}</p>
                   <div className="mt-2 flex items-center gap-2">
-                    <p className="text-3xl font-bold tracking-tight text-slate-800 tabular-nums">
-                      {kpi.value}
-                    </p>
+                    <p className="text-3xl font-bold tracking-tight text-slate-800 tabular-nums">{kpi.value}</p>
                     {kpi.trend !== undefined && <TrendBadge value={kpi.trend} />}
                   </div>
                   <p className="mt-1 text-xs text-slate-400">{kpi.sub}</p>
@@ -157,9 +145,7 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* Two columns */}
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        {/* Recent reservations table */}
         <div className="lg:col-span-2">
           <Card>
             <CardContent className="p-0">
@@ -170,58 +156,37 @@ export default function AdminDashboard() {
                 </div>
               </div>
               {recent.length === 0 ? (
-                <p className="py-12 text-center text-sm text-slate-400">
-                  No hay reservas aún
-                </p>
+                <p className="py-12 text-center text-sm text-slate-400">No hay reservas aún</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[500px] text-left text-sm">
                     <thead>
                       <tr className="border-b border-slate-50">
                         {["Cliente", "Cancha", "Fecha", "Monto", "Estado"].map((h) => (
-                          <th key={h} className="px-6 pb-3 pt-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                            {h}
-                          </th>
+                          <th key={h} className="px-6 pb-3 pt-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {recent.map((r) => (
-                        <tr
-                          key={r.id}
-                          className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50/50"
-                        >
+                        <tr key={r.id} className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50/50">
                           <td className="px-6 py-3">
                             <div className="flex items-center gap-3">
                               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-xs font-bold text-emerald-700">
                                 {(r.guest_name || "??").split(" ").map((n) => n[0]).join("").slice(0, 2)}
                               </div>
-                              <span className="font-medium text-slate-700">
-                                {r.guest_name || "—"}
-                              </span>
+                              <span className="font-medium text-slate-700">{r.guest_name || "—"}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-3 text-slate-500">
-                            {r.court_name}
-                          </td>
+                          <td className="px-6 py-3 text-slate-500">{r.court_name}</td>
                           <td className="px-6 py-3 text-slate-500 tabular-nums">
-                            {new Date(r.starts_at).toLocaleDateString("es-BO", {
-                              day: "numeric",
-                              month: "short",
-                            })}{" "}
-                            <span className="text-slate-400">
-                              {new Date(r.starts_at).toLocaleTimeString("es-BO", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
+                            {new Date(r.starts_at).toLocaleDateString("es-BO", { day: "numeric", month: "short"})}{" "}
+                            <span className="text-slate-400">{new Date(r.starts_at).toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit"})}</span>
                           </td>
                           <td className="px-6 py-3 font-semibold text-slate-700 tabular-nums">
                             Bs {Number(r.price_total).toLocaleString()}
                           </td>
-                          <td className="px-6 py-3">
-                            <StatusBadge status={r.status} />
-                          </td>
+                          <td className="px-6 py-3"><StatusBadge status={r.status} /></td>
                         </tr>
                       ))}
                     </tbody>
@@ -232,9 +197,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Right column: Upcoming + Quick actions */}
         <div className="space-y-6">
-          {/* Próximas reservas */}
           <Card>
             <CardContent className="p-0">
               <div className="border-b border-slate-100 px-5 py-4">
@@ -248,9 +211,7 @@ export default function AdminDashboard() {
                   upcoming.map((r) => (
                     <div key={r.id} className="flex items-center gap-3 py-3">
                       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
-                        r.status === "confirmed"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-700"
+                        r.status === "confirmed" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                       }`}>
                         {new Date(r.starts_at).getHours()}
                       </div>
@@ -270,24 +231,16 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Estado rápido de canchas */}
           <Card>
             <CardContent className="p-5">
               <h3 className="mb-3 text-base font-bold text-slate-800">Canchas ahora</h3>
               <div className="grid grid-cols-2 gap-2">
                 {["Cancha 1", "Cancha 2", "Cancha 3", "Cancha 4"].map((name, i) => (
-                  <div
-                    key={name}
-                    className={`rounded-xl border p-3 text-center transition-all ${
-                      i === 0 || i === 2
-                        ? "border-emerald-200 bg-emerald-50"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
+                  <div key={name} className={`rounded-xl border p-3 text-center transition-all ${
+                    i === 0 || i === 2 ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"
+                  }`}>
                     <p className="text-xs font-semibold text-slate-600">{name}</p>
-                    <p className={`mt-1 text-[11px] font-semibold ${
-                      i === 0 || i === 2 ? "text-emerald-600" : "text-slate-400"
-                    }`}>
+                    <p className={`mt-1 text-[11px] font-semibold ${i === 0 || i === 2 ? "text-emerald-600" : "text-slate-400"}`}>
                       {i === 0 || i === 2 ? "🟢 Ocupada" : "🟢 Disponible"}
                     </p>
                     <p className="mt-0.5 text-[10px] text-slate-400">

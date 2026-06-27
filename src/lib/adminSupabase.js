@@ -1,10 +1,10 @@
 import { supabase } from "./supabaseClient";
 
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000001";
-
 // ---------- DASHBOARD ----------
 
-export async function getDashboardKPIs(orgId = DEMO_ORG_ID) {
+export async function getDashboardKPIs(orgId) {
+  if (!orgId) return null;
+
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
@@ -39,11 +39,9 @@ export async function getDashboardKPIs(orgId = DEMO_ORG_ID) {
     .filter((r) => r.payment_status === "paid")
     .reduce((sum, r) => sum + Number(r.price_total), 0);
 
-  const activeNow = (allReservations ?? []).length;
-
   return {
     todayRevenue,
-    activeReservations: activeNow,
+    activeReservations: (allReservations ?? []).length,
     totalCourts: totalCourts ?? 0,
     todayCount: (todayReservations ?? []).length,
   };
@@ -51,7 +49,8 @@ export async function getDashboardKPIs(orgId = DEMO_ORG_ID) {
 
 // ---------- RESERVATIONS ----------
 
-export async function getAdminReservations(orgId = DEMO_ORG_ID) {
+export async function getAdminReservations(orgId) {
+  if (!orgId) return [];
   const { data, error } = await supabase
     .from("reservations")
     .select("*, venues!inner(name), courts!inner(name, sport)")
@@ -78,7 +77,9 @@ export async function updateReservationStatus(id, status) {
 
 // ---------- COURTS & VENUES ----------
 
-export async function getVenuesWithCourts(orgId = DEMO_ORG_ID) {
+export async function getVenuesWithCourts(orgId) {
+  if (!orgId) return [];
+
   const { data: venues, error: vErr } = await supabase
     .from("venues")
     .select("*")
@@ -155,8 +156,9 @@ export async function toggleActiveVenue(id, isActive) {
 
 // ---------- SCHEDULE ----------
 
-export async function getScheduleData(orgId = DEMO_ORG_ID) {
-  // Get all courts + their operating hours + reservations for the week
+export async function getScheduleData(orgId) {
+  if (!orgId) return { courts: [], operatingHours: [], reservations: [] };
+
   const { data: courts } = await supabase
     .from("courts")
     .select("id, name, sport, venue_id")
@@ -189,7 +191,8 @@ export async function getScheduleData(orgId = DEMO_ORG_ID) {
 
 // ---------- SETTINGS ----------
 
-export async function getOrganization(orgId = DEMO_ORG_ID) {
+export async function getOrganization(orgId) {
+  if (!orgId) return { data: null, error: new Error("No org ID") };
   const { data, error } = await supabase
     .from("organizations")
     .select("*")
@@ -204,4 +207,56 @@ export async function updateOrganization(orgId, updates) {
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq("id", orgId);
   return { error };
+}
+
+// ---------- ONBOARDING: create org for new user ----------
+
+export async function createOrganizationForUser(userId, fullName, orgName) {
+  const now = new Date().toISOString();
+  const slug = orgName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  // 1. Create organization
+  const { data: org, error: orgErr } = await supabase
+    .from("organizations")
+    .insert({
+      name: orgName,
+      slug: slug + "-" + Date.now().toString(36),
+      subscription_plan: "trial",
+      subscription_status: "trialing",
+      created_at: now,
+      updated_at: now,
+    })
+    .select()
+    .single();
+
+  if (orgErr) return { error: orgErr };
+
+  // 2. Create profile
+  const { error: profErr } = await supabase
+    .from("profiles")
+    .upsert({
+      id: userId,
+      full_name: fullName,
+      created_at: now,
+      updated_at: now,
+    });
+
+  if (profErr) return { error: profErr };
+
+  // 3. Create membership
+  const { error: memErr } = await supabase
+    .from("memberships")
+    .insert({
+      organization_id: org.id,
+      user_id: userId,
+      role: "owner",
+      created_at: now,
+    });
+
+  if (memErr) return { error: memErr };
+
+  return { data: org, error: null };
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { RefreshCw, Search, CheckCircle, XCircle, Inbox, Filter } from "lucide-react";
 import { Card, CardContent, Button } from "../ui";
+import { useAuth } from "../../lib/AuthContext";
 import {
   getAdminReservations,
   updateReservationStatus,
@@ -45,6 +46,7 @@ const FILTER_OPTIONS = [
 ];
 
 export default function AdminReservations() {
+  const { orgId } = useAuth();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -53,7 +55,7 @@ export default function AdminReservations() {
 
   const load = async () => {
     setLoading(true);
-    const data = await getAdminReservations();
+    const data = await getAdminReservations(orgId);
     setReservations(data);
     setLoading(false);
   };

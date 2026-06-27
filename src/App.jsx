@@ -20,6 +20,7 @@ import AdminCourts from "./components/admin/AdminCourts";
 import AdminSchedule from "./components/admin/AdminSchedule";
 import AdminSettings from "./components/admin/AdminSettings";
 import LoginPage from "./components/admin/LoginPage";
+import RegisterPage from "./components/admin/RegisterPage";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 
 function LandingPage() {
@@ -154,6 +155,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
+          <Route path="/admin/registro" element={<RegisterPage />} />
           <Route
             path="/admin"
             element={

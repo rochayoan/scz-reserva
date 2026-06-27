@@ -11,6 +11,7 @@ import {
   Star,
 } from "lucide-react";
 import { Card, CardContent, Button } from "../ui";
+import { useAuth } from "../../lib/AuthContext";
 import {
   getVenuesWithCourts,
   saveCourt,
@@ -178,15 +179,16 @@ function SportBadge({ sport }) {
 }
 
 export default function AdminCourts() {
+  const { orgId } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingCourt, setEditingCourt] = useState(null);
-  const [editingVenue, setEditingVenue] = useState(null);
+  const [editingCourt, setEditingCourt] = useState(null); // { venueId, court? }
+  const [editingVenue, setEditingVenue] = useState(null); // venue or null (new)
   const [showNewVenue, setShowNewVenue] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const d = await getVenuesWithCourts();
+    const d = await getVenuesWithCourts(orgId);
     setData(d);
     setLoading(false);
   };

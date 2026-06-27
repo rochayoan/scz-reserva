@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { RefreshCw, Save } from "lucide-react";
 import { Card, CardContent, Button } from "../ui";
+import { useAuth } from "../../lib/AuthContext";
 import { getOrganization, updateOrganization } from "../../lib/adminSupabase";
 
 const PLANS = {
@@ -17,6 +18,7 @@ const STATUSES = {
 };
 
 export default function AdminSettings() {
+  const { orgId } = useAuth();
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,7 +27,7 @@ export default function AdminSettings() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await getOrganization();
+    const { data } = await getOrganization(orgId);
     if (data) {
       setOrg(data);
       setName(data.name ?? "");
