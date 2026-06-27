@@ -75,6 +75,39 @@ export async function updateReservationStatus(id, status) {
   return { error };
 }
 
+// ---------- CREATE RESERVATION ----------
+
+export async function createReservation({
+  organization_id,
+  venue_id,
+  court_id,
+  guest_name,
+  guest_phone,
+  starts_at,
+  ends_at,
+  price_total,
+}) {
+  const { data, error } = await supabase
+    .from("reservations")
+    .insert({
+      organization_id,
+      venue_id,
+      court_id,
+      guest_name: guest_name || "Invitado",
+      guest_phone,
+      starts_at,
+      ends_at,
+      price_total: Math.round(price_total * 100) / 100,
+      status: "pending",
+      payment_status: "unpaid",
+      payment_method: "none",
+    })
+    .select()
+    .single();
+
+  return { data, error };
+}
+
 // ---------- COURTS & VENUES ----------
 
 export async function getVenuesWithCourts(orgId) {
@@ -150,6 +183,48 @@ export async function toggleActiveVenue(id, isActive) {
   const { error } = await supabase
     .from("venues")
     .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  return { error };
+}
+
+// ---------- OPERATING HOURS ----------
+
+export async function saveOperatingHours(entries) {
+  // entries: [{ court_id, day_of_week, open_time, close_time }]
+  if (entries.length === 0) return { error: null };
+
+  const courtId = entries[0].court_id;
+  const days = [...new Set(entries.map((e) => e.day_of_week))];
+
+  // Delete existing hours for this court on these days
+  const { error: delErr } = await supabase
+    .from("court_operating_hours")
+    .delete()
+    .eq("court_id", courtId)
+    .in("day_of_week", days);
+
+  if (delErr) return { error: delErr };
+
+  // Insert new entries
+  const { data, error } = await supabase
+    .from("court_operating_hours")
+    .insert(
+      entries.map((e) => ({
+        court_id: e.court_id,
+        day_of_week: e.day_of_week,
+        open_time: e.open_time,
+        close_time: e.close_time,
+      }))
+    )
+    .select();
+
+  return { data, error };
+}
+
+export async function deleteOperatingHour(id) {
+  const { error } = await supabase
+    .from("court_operating_hours")
+    .delete()
     .eq("id", id);
   return { error };
 }
