@@ -1,17 +1,9 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { MapPin, Star, Check, QrCode, CheckCircle2, User, Phone } from "lucide-react";
+import { MapPin, Star, Check, QrCode, CheckCircle2, User, Phone, RefreshCw } from "lucide-react";
 import { Card, CardContent, Button, SectionLabel, SectionTitle } from "../ui";
 
-function buildSlots(startHour, endHour) {
-  const slots = [];
-  for (let h = startHour; h < endHour; h++) {
-    slots.push(`${String(h).padStart(2, "0")}:00`);
-  }
-  return slots;
-}
-
-export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
+export default function BookingFlow({ court, selectedTime, setSelectedTime, availableTimes, availableLoading }) {
   const [bookingDone, setBookingDone] = useState(false);
   const [bookingStep, setBookingStep] = useState(1);
   const [guestName, setGuestName] = useState("");
@@ -134,25 +126,42 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                     <p className="mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400">
                       Horarios disponibles hoy
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {court.times.map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => {
-                            setSelectedTime(time);
-                            setBookingStep(1);
-                            setBookingDone(false);
-                          }}
-                          className={`flex h-11 cursor-pointer items-center justify-center rounded-xl border px-5 text-sm font-semibold transition-colors ${
-                            selectedTime === time
-                              ? "border-emerald-700 bg-emerald-700 text-white"
-                              : "border-slate-200 hover:border-emerald-400 dark:border-slate-700 dark:hover:border-emerald-500"
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
+                    {availableLoading ? (
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        Cargando disponibilidad...
+                      </div>
+                    ) : availableTimes.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {(availableTimes.length > 0 ? availableTimes : court.times).map((time) => (
+                          <button
+                            key={time}
+                            onClick={() => {
+                              setSelectedTime(time);
+                              setBookingStep(1);
+                              setBookingDone(false);
+                            }}
+                            className={`flex h-11 cursor-pointer items-center justify-center rounded-xl border px-5 text-sm font-semibold transition-colors ${
+                              selectedTime === time
+                                ? "border-emerald-700 bg-emerald-700 text-white"
+                                : "border-slate-200 hover:border-emerald-400 dark:border-slate-700 dark:hover:border-emerald-500"
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl bg-amber-50 p-4 text-center">
+                        <p className="text-sm font-semibold text-amber-700">
+                          No hay horarios disponibles hoy
+                        </p>
+                        <p className="mt-1 text-xs text-amber-600">
+                          Esta cancha no tiene disponibilidad para hoy.
+                          Prueba seleccionar otra cancha o contacta al complejo.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-6 flex items-center justify-between rounded-2xl bg-emerald-50 p-4 dark:bg-emerald-950/20">

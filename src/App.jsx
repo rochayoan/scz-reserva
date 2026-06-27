@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./lib/AuthContext";
 import { getCourts } from "./lib/dataService";
+import { getAvailableSlots } from "./lib/availabilityService";
 import Header from "./components/layout/Header";
 import Hero from "./components/marketing/Hero";
 import ProblemSection from "./components/marketing/ProblemSection";
@@ -37,6 +38,8 @@ function LandingPage() {
   const [time, setTime] = useState("Cualquiera");
   const [selectedCourt, setSelectedCourt] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [availableTimes, setAvailableTimes] = useState([]);
+  const [availableLoading, setAvailableLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -54,6 +57,23 @@ function LandingPage() {
       active = false;
     };
   }, []);
+
+  // Fetch real available slots when court changes
+  useEffect(() => {
+    if (!selectedCourt || !selectedCourt.id) return;
+    let active = true;
+    setAvailableLoading(true);
+
+    // Find the first actual court for this venue to get availability
+    getAvailableSlots(selectedCourt.id, new Date()).then((slots) => {
+      if (!active) return;
+      setAvailableTimes(slots);
+      setSelectedTime(slots[0] ?? selectedCourt.times?.[0] ?? null);
+      setAvailableLoading(false);
+    });
+
+    return () => { active = false; };
+  }, [selectedCourt?.id]);
 
   const filteredCourts = useMemo(() => {
     return courts.filter((court) => {
@@ -78,7 +98,7 @@ function LandingPage() {
 
   const selectCourt = (court) => {
     setSelectedCourt(court);
-    setSelectedTime(court.times[0]);
+    // Don't reset selectedTime here - the useEffect will handle it
   };
 
   const handleHeroSearch = (sport) => {
@@ -138,6 +158,8 @@ function LandingPage() {
               court={selectedCourt}
               selectedTime={selectedTime}
               setSelectedTime={setSelectedTime}
+              availableTimes={availableTimes}
+              availableLoading={availableLoading}
             />
           </>
         )}
