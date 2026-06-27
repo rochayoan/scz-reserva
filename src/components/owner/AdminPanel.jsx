@@ -57,7 +57,7 @@ export default function AdminPanel() {
                     <div>
                       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{kpi.label}</p>
                       <p className="mt-2 text-4xl font-bold tracking-tight tabular-nums">{kpi.value}</p>
-                      <p className="mt-2 text-sm font-semibold text-emerald-600">{kpi.change}</p>
+                      <p className="mt-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{kpi.change}</p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/30">
                       <KpiIcon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
@@ -99,19 +99,19 @@ export default function AdminPanel() {
                   <table className="w-full min-w-[700px] text-left text-sm">
                   <thead className="border-b border-slate-100 dark:border-slate-800">
                     <tr>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Cliente
                       </th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Cancha
                       </th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Hora
                       </th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Pago
                       </th>
-                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Estado
                       </th>
                     </tr>

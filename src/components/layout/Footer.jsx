@@ -61,7 +61,7 @@ export default function Footer() {
           <p className="text-sm text-slate-500 dark:text-slate-400">
             © 2026 SCZ-RESERVA — Plataforma de reservas deportivas.
           </p>
-          <p className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+          <p className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
             Hecho con <Heart className="h-3.5 w-3.5 fill-emerald-500 text-emerald-500" strokeWidth={0} /> en Santa Cruz de la Sierra
           </p>
         </div>

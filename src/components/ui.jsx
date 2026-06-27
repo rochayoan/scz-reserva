@@ -5,7 +5,7 @@ export function Button({ children, className = "", variant = "solid", ...props }
   const base =
     "inline-flex items-center justify-center rounded-xl h-11 px-5 text-sm font-semibold transition-all duration-150 ease-out active:scale-[0.99] cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40";
   const variants = {
-    solid: "bg-emerald-600 text-white hover:bg-emerald-700",
+    solid: "bg-emerald-700 text-white hover:bg-emerald-800",
     white: "bg-white text-emerald-700 hover:bg-emerald-50",
     outline:
       "border border-slate-200 bg-transparent hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800",
@@ -58,7 +58,11 @@ export function Badge({ children, className = "", variant = "default" }) {
 }
 
 export function SectionLabel({ children }) {
-  return <p className="font-semibold text-emerald-600 text-xs tracking-wider uppercase">{children}</p>;
+  return (
+    <p className="font-semibold text-emerald-700 text-xs tracking-wider uppercase dark:text-emerald-400">
+      {children}
+    </p>
+  );
 }
 
 export function SectionTitle({ children, className = "" }) {
@@ -80,7 +84,7 @@ export function SegmentedControl({ options, value, onChange, className = "" }) {
           onClick={() => onChange(opt)}
           className={`flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold whitespace-nowrap transition-all duration-150 ease-out cursor-pointer ${
             value === opt
-              ? "bg-emerald-600 text-white"
+              ? "bg-emerald-700 text-white"
               : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
           }`}
         >

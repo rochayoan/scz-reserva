@@ -71,7 +71,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                           }}
                           className={`flex h-11 cursor-pointer items-center justify-center rounded-xl border px-5 text-sm font-semibold transition-colors ${
                             selectedTime === time
-                              ? "border-emerald-600 bg-emerald-600 text-white"
+                              ? "border-emerald-700 bg-emerald-700 text-white"
                               : "border-slate-200 hover:border-emerald-400 dark:border-slate-700 dark:hover:border-emerald-500"
                           }`}
                         >
@@ -102,7 +102,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                     <div
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                         bookingStep >= step
-                          ? "bg-emerald-600 text-white"
+                          ? "bg-emerald-700 text-white"
                           : "bg-slate-200 text-slate-500 dark:bg-slate-700"
                       }`}
                     >
@@ -129,20 +129,20 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
               {/* Summary */}
               <div className="mt-5 space-y-3 text-sm">
                 <div className="flex justify-between border-b border-slate-100 py-2 dark:border-slate-800">
-                  <span className="text-slate-500">Cancha</span>
+                  <span className="text-slate-500 dark:text-slate-400">Cancha</span>
                   <b className="max-w-[60%] text-right">{court.name}</b>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 py-2 dark:border-slate-800">
-                  <span className="text-slate-500">Deporte</span>
+                  <span className="text-slate-500 dark:text-slate-400">Deporte</span>
                   <b>{court.sport}</b>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 py-2 dark:border-slate-800">
-                  <span className="text-slate-500">Horario</span>
+                  <span className="text-slate-500 dark:text-slate-400">Horario</span>
                   <b>Hoy · {selectedTime}</b>
                 </div>
                 <div className="flex justify-between py-2">
-                  <span className="text-slate-500">Total</span>
-                  <b className="text-lg tabular-nums text-emerald-600">Bs {court.price}</b>
+                  <span className="text-slate-500 dark:text-slate-400">Total</span>
+                  <b className="text-lg tabular-nums text-emerald-700 dark:text-emerald-400">Bs {court.price}</b>
                 </div>
               </div>
 
@@ -173,7 +173,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                     <CheckCircle2 className="h-5 w-5" strokeWidth={1.75} />
                     ¡Reserva confirmada!
                   </p>
-                  <p className="mt-1 text-sm text-emerald-600 dark:text-emerald-400">
+                  <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-400">
                     Te esperamos hoy a las {selectedTime} en {court.name}
                   </p>
                 </div>

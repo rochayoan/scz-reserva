@@ -29,7 +29,7 @@ export default function Hero({ onSearch }) {
       <div className="relative mx-auto grid max-w-7xl items-center gap-12 md:grid-cols-2 lg:gap-16">
         {/* Columna izquierda: mensaje + accion */}
         <div className="animate-fade-in-up">
-          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-600">
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
             <MapPin className="h-4 w-4" strokeWidth={1.75} />
             Santa Cruz de la Sierra
           </p>
@@ -44,7 +44,7 @@ export default function Hero({ onSearch }) {
 
           {/* Segmented control de deportes */}
           <div className="mt-8">
-            <p className="mb-2 text-xs font-medium text-slate-400">¿Qué quieres jugar?</p>
+            <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">¿Qué quieres jugar?</p>
             <SegmentedControl options={SPORTS} value={activeSport} onChange={selectSport} />
           </div>
 
@@ -69,7 +69,7 @@ export default function Hero({ onSearch }) {
                 <p className="text-xl font-semibold tabular-nums text-slate-900 dark:text-white">
                   {item.value}
                 </p>
-                <p className="text-xs text-slate-400">{item.label}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{item.label}</p>
               </div>
             ))}
           </div>

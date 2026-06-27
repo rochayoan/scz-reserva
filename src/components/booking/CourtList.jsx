@@ -44,7 +44,7 @@ export default function CourtList({
           <SectionLabel>Canchas disponibles</SectionLabel>
           <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
             <SectionTitle>Encuentra el espacio ideal</SectionTitle>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               {courts.length} {courts.length === 1 ? "cancha" : "canchas"}
             </p>
           </div>
@@ -143,12 +143,12 @@ export default function CourtList({
 
                 <div className="mt-4 flex items-end justify-between">
                   <div>
-                    <p className="text-xs text-slate-400">{court.category}</p>
-                    <p className="mt-0.5 text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{court.category}</p>
+                    <p className="mt-0.5 text-2xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
                       Bs {court.price}
                     </p>
                   </div>
-                  <p className="text-sm text-slate-400">{court.fields} cancha(s)</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{court.fields} cancha(s)</p>
                 </div>
 
                 {/* Time slots preview */}
@@ -162,14 +162,14 @@ export default function CourtList({
                     </span>
                   ))}
                   {court.times.length > 3 && (
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-400 dark:bg-slate-800">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                       +{court.times.length - 3}
                     </span>
                   )}
                 </div>
 
                 {/* Afford de accion — la card entera es clickeable */}
-                <div className="mt-5 flex items-center gap-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                <div className="mt-5 flex items-center gap-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                   Ver horarios
                   <ArrowRight
                     className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-0.5"

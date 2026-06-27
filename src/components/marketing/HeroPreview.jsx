@@ -27,16 +27,16 @@ function MiniCourtCard({ court }) {
           <p className="truncate text-[11px] font-semibold text-slate-900 dark:text-white">
             {court.name}
           </p>
-          <span className="flex shrink-0 items-center gap-0.5 text-[10px] font-medium text-amber-500">
+          <span className="flex shrink-0 items-center gap-0.5 text-[10px] font-medium text-slate-700 dark:text-slate-300">
             <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" strokeWidth={1.75} />
             {court.rating}
           </span>
         </div>
-        <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-slate-400">
+        <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-slate-500 dark:text-slate-400">
           <MapPin className="h-2.5 w-2.5" strokeWidth={1.75} />
           {court.zone}
         </p>
-        <p className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+        <p className="mt-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
           Bs {court.price}
         </p>
       </div>
