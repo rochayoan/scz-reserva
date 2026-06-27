@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   RefreshCw,
-  ChevronLeft,
-  ChevronRight,
   Save,
+  Clock,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Check,
   Sun,
   Moon,
-  Clock,
-  Plus,
-  Trash2,
 } from "lucide-react";
 import { Card, CardContent, Button } from "../ui";
 import { useAuth } from "../../lib/AuthContext";
@@ -34,24 +34,112 @@ const HOURS = Array.from({ length: 24 }, (_, i) =>
 const DEFAULT_OPEN = "08:00";
 const DEFAULT_CLOSE = "22:00";
 
+const SPORT_ICONS = { futbol: "⚽", padel: "🎾", tenis: "🏸" };
+
+const COURT_COLORS = [
+  "from-emerald-500 to-emerald-600",
+  "from-blue-500 to-blue-600",
+  "from-amber-500 to-amber-600",
+  "from-violet-500 to-violet-600",
+  "from-rose-500 to-rose-600",
+  "from-cyan-500 to-cyan-600",
+];
+
+const PRESETS = [
+  { label: "Mañana a noche", open: "08:00", close: "22:00", desc: "14h" },
+  { label: "Solo mañana", open: "08:00", close: "12:00", desc: "4h" },
+  { label: "Tarde a noche", open: "14:00", close: "22:00", desc: "8h" },
+  { label: "Madrugada", open: "06:00", close: "12:00", desc: "6h" },
+  { label: "Diurno", open: "09:00", close: "18:00", desc: "9h" },
+];
+
+function TimeBar({ open, close }) {
+  const openH = parseInt(open) || 8;
+  const closeH = parseInt(close) || 22;
+  const totalHours = 24;
+  const leftPct = (openH / totalHours) * 100;
+  const widthPct = ((closeH - openH) / totalHours) * 100;
+
+  return (
+    <div className="relative h-6 w-full min-w-[140px] rounded-full bg-slate-100">
+      <div
+        className="absolute top-0 h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500"
+        style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+      />
+      <div className="absolute inset-0 flex items-center justify-between px-2">
+        <span className="text-[10px] font-bold text-white drop-shadow-sm">
+          {open}
+        </span>
+        <span className="text-[10px] font-bold text-white drop-shadow-sm">
+          {close}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function WeekSummary({ config, courtId }) {
+  const openDays = DAYS.filter(
+    (d) => config[`${courtId}_${d.index}`]?.enabled
+  );
+  const totalHours = openDays.reduce((sum, d) => {
+    const cfg = config[`${courtId}_${d.index}`];
+    if (!cfg) return sum;
+    return sum + (parseInt(cfg.close) - parseInt(cfg.open));
+  }, 0);
+
+  return (
+    <div className="mb-5 flex flex-wrap items-center gap-4 rounded-2xl bg-emerald-50/70 px-5 py-3">
+      <div className="flex items-center gap-1.5">
+        <span className="text-lg">{openDays.length}</span>
+        <span className="text-xs text-slate-500">días abierto</span>
+      </div>
+      <div className="h-6 w-px bg-emerald-200" />
+      <div className="flex items-center gap-1.5">
+        <span className="text-lg">{totalHours}</span>
+        <span className="text-xs text-slate-500">horas/semana</span>
+      </div>
+      <div className="h-6 w-px bg-emerald-200" />
+      <div className="flex gap-1">
+        {DAYS.map((d) => {
+          const isOpen = config[`${courtId}_${d.index}`]?.enabled;
+          return (
+            <div
+              key={d.index}
+              className={`h-4 w-4 rounded-sm text-[8px] font-bold flex items-center justify-center ${
+                isOpen
+                  ? "bg-emerald-500 text-white"
+                  : "bg-slate-200 text-slate-400"
+              }`}
+              title={d.label}
+            >
+              {d.label[0]}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminSchedule() {
   const { orgId } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedCourt, setSelectedCourt] = useState(null);
-  const [hoursConfig, setHoursConfig] = useState({}); // { "courtId_day": { open, close, enabled } }
+  const [hoursConfig, setHoursConfig] = useState({});
   const [saved, setSaved] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(new Date().getDay());
 
   const load = useCallback(async () => {
     setLoading(true);
     const d = await getScheduleData(orgId);
     setData(d);
-    if (d.courts.length > 0 && !selectedCourt) {
-      setSelectedCourt(d.courts[0].id);
+    if (d.courts.length > 0) {
+      setSelectedCourt((prev) =>
+        prev && d.courts.find((c) => c.id === prev) ? prev : d.courts[0].id
+      );
     }
-    // Build config from existing operating hours
     const config = {};
     for (const court of d.courts) {
       for (const day of DAYS) {
@@ -66,19 +154,23 @@ export default function AdminSchedule() {
             enabled: true,
           };
         } else {
-          config[key] = { open: DEFAULT_OPEN, close: DEFAULT_CLOSE, enabled: false };
+          config[key] = {
+            open: DEFAULT_OPEN,
+            close: DEFAULT_CLOSE,
+            enabled: false,
+          };
         }
       }
     }
     setHoursConfig(config);
     setLoading(false);
-  }, [orgId, selectedCourt]);
+  }, [orgId]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const getConfig = (courtId, dayIndex) =>
+  const getCfg = (courtId, dayIndex) =>
     hoursConfig[`${courtId}_${dayIndex}`] || {
       open: DEFAULT_OPEN,
       close: DEFAULT_CLOSE,
@@ -90,7 +182,7 @@ export default function AdminSchedule() {
     setHoursConfig((prev) => ({
       ...prev,
       [key]: {
-        ...getConfig(courtId, dayIndex),
+        ...getCfg(courtId, dayIndex),
         enabled: !prev[key]?.enabled,
       },
     }));
@@ -100,33 +192,37 @@ export default function AdminSchedule() {
     const key = `${courtId}_${dayIndex}`;
     setHoursConfig((prev) => ({
       ...prev,
-      [key]: {
-        ...getConfig(courtId, dayIndex),
-        [field]: value,
-      },
+      [key]: { ...getCfg(courtId, dayIndex), [field]: value },
     }));
   };
 
-  const setAllDays = (courtId, enabled) => {
+  const applyPreset = (courtId, open, close) => {
     const newConfig = { ...hoursConfig };
     for (const day of DAYS) {
       const key = `${courtId}_${day.index}`;
-      newConfig[key] = {
-        ...getConfig(courtId, day.index),
-        enabled,
-      };
+      newConfig[key] = { ...getCfg(courtId, day.index), open, close };
     }
     setHoursConfig(newConfig);
   };
 
-  const setAllHours = (courtId, open, close) => {
+  const toggleAll = (courtId, enabled) => {
+    const newConfig = { ...hoursConfig };
+    for (const day of DAYS) {
+      const key = `${courtId}_${day.index}`;
+      newConfig[key] = { ...getCfg(courtId, day.index), enabled };
+    }
+    setHoursConfig(newConfig);
+  };
+
+  const copyFromDay = (courtId, fromDayIndex) => {
+    const src = getCfg(courtId, fromDayIndex);
     const newConfig = { ...hoursConfig };
     for (const day of DAYS) {
       const key = `${courtId}_${day.index}`;
       newConfig[key] = {
-        ...getConfig(courtId, day.index),
-        open,
-        close,
+        open: src.open,
+        close: src.close,
+        enabled: day.index === fromDayIndex ? src.enabled : false,
       };
     }
     setHoursConfig(newConfig);
@@ -135,11 +231,9 @@ export default function AdminSchedule() {
   const handleSave = async () => {
     if (!selectedCourt) return;
     setSaving(true);
-
-    // Build entries for this court
     const entries = [];
     for (const day of DAYS) {
-      const cfg = getConfig(selectedCourt, day.index);
+      const cfg = getCfg(selectedCourt, day.index);
       if (cfg.enabled) {
         entries.push({
           court_id: selectedCourt,
@@ -149,7 +243,6 @@ export default function AdminSchedule() {
         });
       }
     }
-
     const { error } = await saveOperatingHours(entries);
     if (!error) {
       setSaved(true);
@@ -158,47 +251,7 @@ export default function AdminSchedule() {
     setSaving(false);
   };
 
-  // Current court data
   const currentCourt = data?.courts?.find((c) => c.id === selectedCourt);
-
-  // Reservations for the schedule view
-  const reservations = data?.reservations ?? [];
-  const courts = data?.courts ?? [];
-
-  const dayReservations = reservations.filter((r) => {
-    const d = new Date(r.starts_at);
-    return d.getDay() === selectedDay;
-  });
-
-  const getSlot = (courtId, hour) => {
-    return dayReservations.find((r) => {
-      const start = new Date(r.starts_at);
-      const end = new Date(r.ends_at);
-      const slotEnd = new Date(start);
-      slotEnd.setHours(hour + 1, 0, 0, 0);
-      return (
-        r.court_id === courtId &&
-        start < slotEnd &&
-        end > new Date(start.setHours(hour, 0, 0, 0))
-      );
-    });
-  };
-
-  const COURT_COLORS = [
-    "from-emerald-500 to-emerald-600",
-    "from-blue-500 to-blue-600",
-    "from-amber-500 to-amber-600",
-    "from-violet-500 to-violet-600",
-    "from-rose-500 to-rose-600",
-    "from-cyan-500 to-cyan-600",
-  ];
-
-  const STATUS_COLORS = {
-    confirmed: "bg-emerald-500",
-    pending: "bg-amber-400",
-    completed: "bg-blue-500",
-    cancelled: "bg-red-400",
-  };
 
   if (loading) {
     return (
@@ -223,7 +276,7 @@ export default function AdminSchedule() {
   }
 
   return (
-    <div>
+    <div className="max-w-4xl">
       {/* Header */}
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
@@ -231,340 +284,287 @@ export default function AdminSchedule() {
             Horarios
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Configura la disponibilidad de tus canchas
+            Configura la disponibilidad de cada cancha por día de la semana
           </p>
         </div>
         <button
           onClick={load}
           className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-500 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50"
         >
-          <RefreshCw
-            className="h-4 w-4 transition-transform duration-700 group-hover:rotate-180"
-            strokeWidth={1.75}
-          />
+          <RefreshCw className="h-4 w-4 transition-transform duration-700 group-hover:rotate-180" strokeWidth={1.75} />
           Recargar
         </button>
       </div>
 
-      {/* Tabs: Court selector */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {courts.map((court, i) => (
-          <button
-            key={court.id}
-            onClick={() => setSelectedCourt(court.id)}
-            className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-              selectedCourt === court.id
-                ? `bg-gradient-to-r ${COURT_COLORS[i % COURT_COLORS.length]} text-white shadow-sm`
-                : "border border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"
-            }`}
-          >
-            {court.name}
-          </button>
-        ))}
+      {/* Court Cards */}
+      <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {data.courts.map((court, i) => {
+          const isSelected = selectedCourt === court.id;
+          const openDays = DAYS.filter((d) => getCfg(court.id, d.index).enabled).length;
+          const totalH = DAYS.reduce((sum, d) => {
+            const cfg = getCfg(court.id, d.index);
+            return cfg?.enabled ? sum + (parseInt(cfg.close) - parseInt(cfg.open)) : sum;
+          }, 0);
+
+          return (
+            <button
+              key={court.id}
+              onClick={() => setSelectedCourt(court.id)}
+              className={`relative overflow-hidden rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+                isSelected
+                  ? "border-emerald-500 bg-emerald-50/50 shadow-md shadow-emerald-200/30"
+                  : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+              }`}
+            >
+              {/* Top accent bar */}
+              <div
+                className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
+                  COURT_COLORS[i % COURT_COLORS.length]
+                } ${isSelected ? "opacity-100" : "opacity-0"}`}
+              />
+
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg ${
+                      isSelected
+                        ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm"
+                        : "bg-slate-100"
+                    }`}
+                  >
+                    {SPORT_ICONS[court.sport] || "🏟️"}
+                  </div>
+                  <div>
+                    <p
+                      className={`text-sm font-bold ${
+                        isSelected ? "text-emerald-800" : "text-slate-700"
+                      }`}
+                    >
+                      {court.name}
+                    </p>
+                    <p className="text-xs capitalize text-slate-400">
+                      {court.sport}
+                    </p>
+                  </div>
+                </div>
+                {isSelected && (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-3 flex items-center gap-3 text-xs text-slate-400">
+                <span>
+                  <b className="text-slate-600">{openDays}</b> días
+                </span>
+                <span>·</span>
+                <span>
+                  <b className="text-slate-600">{totalH}h</b>/sem
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {selectedCourt && (
-        <>
-          {/* Availability Editor */}
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800">
-                    {currentCourt?.name}
-                  </h3>
-                  <p className="text-xs text-slate-400 capitalize">
-                    {currentCourt?.sport}
-                  </p>
+      {/* Editor */}
+      {selectedCourt && currentCourt && (
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            {/* Card header */}
+            <div className="border-b border-slate-100 bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">
+                    {SPORT_ICONS[currentCourt.sport] || "🏟️"}
+                  </span>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">
+                      {currentCourt.name}
+                    </h2>
+                    <p className="text-xs text-emerald-100 capitalize">
+                      {currentCourt.sport} · Configuración de horarios
+                    </p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setAllDays(selectedCourt, true)}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition-all hover:bg-slate-50"
-                  >
-                    Activar todos
-                  </button>
-                  <button
-                    onClick={() => setAllDays(selectedCourt, false)}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition-all hover:bg-slate-50"
-                  >
-                    Desactivar todos
-                  </button>
-                </div>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-white/20 text-white hover:bg-white/30 border-0 shadow-none"
+                >
+                  <Save className="mr-1.5 h-4 w-4" />
+                  {saving ? "Guardando..." : saved ? "✓ Guardado" : "Guardar"}
+                </Button>
               </div>
+            </div>
+
+            <div className="p-6">
+              {/* Week summary */}
+              <WeekSummary config={hoursConfig} courtId={selectedCourt} />
 
               {/* Quick actions */}
-              <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 p-3">
-                <span className="text-xs font-semibold text-slate-500">
-                  Rellenar horario:
-                </span>
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (!e.target.value) return;
-                    const parts = e.target.value.split("-");
-                    setAllHours(selectedCourt, parts[0], parts[1]);
-                    e.target.value = "";
-                  }}
-                  className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-600 outline-none"
-                >
-                  <option value="">Seleccionar...</option>
-                  <option value="08:00-22:00">Mañana a noche (08-22)</option>
-                  <option value="08:00-12:00">Solo mañana (08-12)</option>
-                  <option value="14:00-22:00">Solo tarde/noche (14-22)</option>
-                  <option value="06:00-18:00">Madrugada a tarde (06-18)</option>
-                  <option value="09:00-21:00">Diurno (09-21)</option>
-                </select>
+              <div className="mb-6 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-500 mr-1">
+                    Acciones rápidas:
+                  </span>
+                  <button
+                    onClick={() => toggleAll(selectedCourt, true)}
+                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-all hover:bg-emerald-100"
+                  >
+                    Abrir todos los días
+                  </button>
+                  <button
+                    onClick={() => toggleAll(selectedCourt, false)}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 transition-all hover:bg-slate-50"
+                  >
+                    Cerrar todos
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-500 mr-1">
+                    Rellenar horario:
+                  </span>
+                  {PRESETS.map((p) => (
+                    <button
+                      key={p.label}
+                      onClick={() => applyPreset(selectedCourt, p.open, p.close)}
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                      title={p.desc}
+                    >
+                      {p.label} ({p.desc})
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Days grid */}
-              <div className="space-y-2">
+              {/* Day cards */}
+              <div className="space-y-3">
                 {DAYS.map((day) => {
-                  const cfg = getConfig(selectedCourt, day.index);
+                  const cfg = getCfg(selectedCourt, day.index);
                   const isToday = day.index === new Date().getDay();
+
                   return (
                     <div
                       key={day.index}
-                      className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 transition-all ${
+                      className={`rounded-2xl border transition-all duration-200 ${
                         cfg.enabled
-                          ? "border-emerald-200 bg-emerald-50/30"
-                          : "border-slate-100 bg-white"
-                      } ${isToday ? "ring-1 ring-emerald-300/30" : ""}`}
+                          ? "border-emerald-200 bg-white"
+                          : "border-slate-100 bg-slate-50/50"
+                      } ${isToday ? "ring-1 ring-emerald-300/40" : ""}`}
                     >
-                      {/* Toggle */}
-                      <button
-                        onClick={() => toggleDay(selectedCourt, day.index)}
-                        className={`flex w-20 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold transition-all ${
-                          cfg.enabled
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-slate-100 text-slate-400"
-                        }`}
-                      >
-                        <div
-                          className={`h-2 w-2 rounded-full ${
-                            cfg.enabled ? "bg-emerald-500" : "bg-slate-300"
-                          }`}
-                        />
-                        {day.short}
-                      </button>
-
-                      {/* Time inputs */}
-                      {cfg.enabled ? (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <Sun className="h-3.5 w-3.5 text-amber-500" />
-                            <select
-                              value={cfg.open}
-                              onChange={(e) =>
-                                updateTime(
-                                  selectedCourt,
-                                  day.index,
-                                  "open",
-                                  e.target.value
-                                )
-                              }
-                              className="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 outline-none transition-colors focus:border-emerald-400"
+                      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
+                        {/* Day label + toggle */}
+                        <div className="flex min-w-[100px] items-center gap-3">
+                          <button
+                            onClick={() => toggleDay(selectedCourt, day.index)}
+                            className={`relative flex h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${
+                              cfg.enabled ? "bg-emerald-500" : "bg-slate-300"
+                            }`}
+                          >
+                            <div
+                              className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                                cfg.enabled
+                                  ? "translate-x-[22px]"
+                                  : "translate-x-0.5"
+                              }`}
+                            />
+                          </button>
+                          <div>
+                            <p
+                              className={`text-sm font-bold ${
+                                cfg.enabled ? "text-slate-800" : "text-slate-400"
+                              }`}
                             >
-                              {HOURS.map((h) => (
-                                <option key={h} value={h}>
-                                  {h}
-                                </option>
-                              ))}
-                            </select>
+                              {day.label}
+                            </p>
+                            {isToday && (
+                              <span className="text-[10px] font-semibold text-emerald-600">
+                                Hoy
+                              </span>
+                            )}
                           </div>
-                          <span className="text-xs text-slate-400">→</span>
-                          <div className="flex items-center gap-2">
-                            <Moon className="h-3.5 w-3.5 text-indigo-400" />
-                            <select
-                              value={cfg.close}
-                              onChange={(e) =>
-                                updateTime(
-                                  selectedCourt,
-                                  day.index,
-                                  "close",
-                                  e.target.value
-                                )
-                              }
-                              className="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 outline-none transition-colors focus:border-emerald-400"
-                            >
-                              {HOURS.map((h) => (
-                                <option key={h} value={h}>
-                                  {h}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                        </div>
 
-                          {isToday && (
-                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                              Hoy
+                        {/* Time controls */}
+                        {cfg.enabled ? (
+                          <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                            <div className="flex items-center gap-2">
+                              <Sun className="h-3.5 w-3.5 text-amber-500" />
+                              <select
+                                value={cfg.open}
+                                onChange={(e) =>
+                                  updateTime(selectedCourt, day.index, "open", e.target.value)
+                                }
+                                className="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 outline-none transition-colors focus:border-emerald-400"
+                              >
+                                {HOURS.map((h) => (
+                                  <option key={h} value={h}>
+                                    {h}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="flex-1 min-w-0 px-1">
+                              <TimeBar open={cfg.open} close={cfg.close} />
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Moon className="h-3.5 w-3.5 text-indigo-400" />
+                              <select
+                                value={cfg.close}
+                                onChange={(e) =>
+                                  updateTime(selectedCourt, day.index, "close", e.target.value)
+                                }
+                                className="h-8 w-20 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 outline-none transition-colors focus:border-emerald-400"
+                              >
+                                {HOURS.map((h) => (
+                                  <option key={h} value={h}>
+                                    {h}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Copy this day to others */}
+                            <button
+                              onClick={() => copyFromDay(selectedCourt, day.index)}
+                              className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600"
+                              title="Copiar horario a todos los días"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-1 items-center">
+                            <span className="flex items-center gap-2 text-xs text-slate-400 italic">
+                              <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                              Cerrado este día
                             </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-xs text-slate-400 italic">
-                          Cerrado
-                        </span>
-                      )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Save */}
-              <div className="mt-6 flex justify-end">
+              {/* Save footer */}
+              <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-50 px-5 py-3">
+                <p className="text-xs text-slate-400">
+                  Los cambios se reflejan automáticamente en la página pública
+                </p>
                 <Button onClick={handleSave} disabled={saving}>
                   <Save className="mr-1.5 h-4 w-4" />
-                  {saving
-                    ? "Guardando..."
-                    : saved
-                    ? "✓ Guardado"
-                    : "Guardar horarios"}
+                  {saving ? "Guardando..." : saved ? "✓ Guardado" : "Guardar"}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Weekly View */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-800">
-                  Vista semanal
-                </h3>
-                <div className="flex items-center gap-2">
-                  <button className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <span className="text-xs font-semibold text-slate-500">
-                    {DAYS[selectedDay]?.label}
-                  </span>
-                  <button className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Day pills */}
-              <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1">
-                {DAYS.map((day) => (
-                  <button
-                    key={day.index}
-                    onClick={() => setSelectedDay(day.index)}
-                    className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                      selectedDay === day.index
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                    } ${
-                      day.index === new Date().getDay()
-                        ? "ring-1 ring-emerald-300"
-                        : ""
-                    }`}
-                  >
-                    {day.short}
-                  </button>
-                ))}
-              </div>
-
-              {/* Schedule grid */}
-              <div className="overflow-x-auto">
-                <div className="min-w-[600px]">
-                  {/* Header */}
-                  <div className="flex border-b border-slate-100 bg-slate-50/50">
-                    <div className="w-14 shrink-0" />
-                    {courts.map((court, i) => (
-                      <div
-                        key={court.id}
-                        className="flex min-w-[120px] flex-1 items-center justify-center border-l border-slate-100 py-2.5"
-                      >
-                        <p className="text-xs font-bold text-slate-600">
-                          {court.name}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Hour rows (7-22) */}
-                  {Array.from({ length: 15 }, (_, i) => i + 7).map((h) => {
-                    const hour = `${String(h).padStart(2, "0")}:00`;
-                    return (
-                      <div
-                        key={h}
-                        className="flex border-b border-slate-50 transition-colors hover:bg-slate-50/30"
-                      >
-                        <div className="flex w-14 shrink-0 items-start justify-center pt-2 text-[11px] font-semibold text-slate-400">
-                          {hour}
-                        </div>
-                        {courts.map((court, ci) => {
-                          const slot = getSlot(court.id, h);
-                          const cfg = getConfig(court.id, selectedDay);
-                          const isOpen =
-                            cfg.enabled &&
-                            parseInt(cfg.open) <= h &&
-                            parseInt(cfg.close) > h;
-                          return (
-                            <div
-                              key={court.id}
-                              className="relative min-w-[120px] flex-1 border-l border-slate-50"
-                              style={{ minHeight: "36px" }}
-                            >
-                              {slot && (
-                                <div
-                                  className={`m-0.5 rounded-md bg-gradient-to-r ${
-                                    COURT_COLORS[ci % COURT_COLORS.length]
-                                  } bg-opacity-90 px-2 py-1 shadow-sm`}
-                                  style={{ minHeight: "30px" }}
-                                >
-                                  <p className="text-[10px] font-bold text-white leading-tight truncate">
-                                    {slot.guest_name || "Invitado"}
-                                  </p>
-                                  <p className="text-[9px] text-white/70">
-                                    Bs{" "}
-                                    {Number(slot.price_total).toLocaleString()}
-                                  </p>
-                                </div>
-                              )}
-                              {!slot && isOpen && (
-                                <div className="h-full w-full opacity-0 hover:opacity-100 transition-opacity">
-                                  <div className="mx-0.5 h-[30px] rounded-md border border-dashed border-emerald-200 bg-emerald-50/40" />
-                                </div>
-                              )}
-                              {!slot && !isOpen && (
-                                <div className="h-full bg-slate-50/50" />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div className="mt-5 flex flex-wrap items-center gap-5">
-                <span className="text-xs font-semibold text-slate-500">
-                  Estado:
-                </span>
-                {[
-                  { color: "bg-slate-50 border border-slate-200", label: "Cerrado" },
-                  { color: "bg-emerald-100", label: "Disponible" },
-                  { color: "bg-emerald-500", label: "Ocupado" },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-center gap-2 text-xs text-slate-500"
-                  >
-                    <div
-                      className={`h-2.5 w-5 rounded ${item.color}`}
-                    />
-                    {item.label}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
