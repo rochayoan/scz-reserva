@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./lib/AuthContext";
 import { getCourts } from "./lib/dataService";
 import Header from "./components/layout/Header";
 import Hero from "./components/marketing/Hero";
@@ -11,8 +13,16 @@ import BenefitsSection from "./components/marketing/BenefitsSection";
 import AdminPanel from "./components/owner/AdminPanel";
 import CTASection from "./components/marketing/CTASection";
 import Footer from "./components/layout/Footer";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminReservations from "./components/admin/AdminReservations";
+import AdminCourts from "./components/admin/AdminCourts";
+import AdminSchedule from "./components/admin/AdminSchedule";
+import AdminSettings from "./components/admin/AdminSettings";
+import LoginPage from "./components/admin/LoginPage";
+import ProtectedRoute from "./components/admin/ProtectedRoute";
 
-export default function App() {
+function LandingPage() {
   const [courts, setCourts] = useState([]);
   const [courtsLoading, setCourtsLoading] = useState(true);
   const [courtsError, setCourtsError] = useState(null);
@@ -67,8 +77,6 @@ export default function App() {
     setSelectedTime(court.times[0]);
   };
 
-  // Callback estrecha para el Hero: setea el filtro de deporte y baja a #canchas.
-  // El Hero no conoce el estado de filtros ni a CourtList; solo llama onSearch.
   const handleHeroSearch = (sport) => {
     setSport(sport ?? "Todos");
     document.getElementById("canchas")?.scrollIntoView({ behavior: "smooth" });
@@ -136,5 +144,32 @@ export default function App() {
         <Footer />
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/admin/login" element={<LoginPage />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="reservas" element={<AdminReservations />} />
+            <Route path="canchas" element={<AdminCourts />} />
+            <Route path="horarios" element={<AdminSchedule />} />
+            <Route path="configuracion" element={<AdminSettings />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

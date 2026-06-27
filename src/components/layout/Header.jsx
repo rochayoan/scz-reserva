@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Goal, Moon, Sun, Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Goal, Moon, Sun, Menu, X, LogIn } from "lucide-react";
 import { Button } from "../ui";
 
 export default function Header({ dark, setDark }) {
@@ -42,6 +43,14 @@ export default function Header({ dark, setDark }) {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
+          {/* Soy dueño */}
+          <Link
+            to="/admin/login"
+            className="hidden md:flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
+          >
+            <LogIn className="h-4 w-4" strokeWidth={1.75} />
+            Soy dueño
+          </Link>
           {/* Dark Mode Toggle */}
           <button
             onClick={() => setDark(!dark)}
@@ -61,9 +70,9 @@ export default function Header({ dark, setDark }) {
             </span>
           </button>
 
-          {/* Login Button */}
-          <Button variant="ghost" className="hidden md:inline-flex text-sm">
-            Iniciar sesión
+          {/* Reservar ahora */}
+          <Button>
+            Reservar ahora
           </Button>
 
           {/* Mobile Menu Button */}
@@ -95,8 +104,16 @@ export default function Header({ dark, setDark }) {
                 {link.label}
               </a>
             ))}
-            <Button variant="ghost" className="mt-2 w-full text-sm">
-              Iniciar sesión
+            <Link
+              to="/admin/login"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
+            >
+              <LogIn className="h-4 w-4" strokeWidth={1.75} />
+              Soy dueño
+            </Link>
+            <Button className="mt-2 w-full text-sm">
+              Reservar ahora
             </Button>
           </nav>
         </div>

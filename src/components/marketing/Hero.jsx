@@ -35,7 +35,11 @@ export default function Hero({ onSearch }) {
           </p>
 
           <h1 className="mt-4 max-w-xl text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 md:text-5xl dark:text-white">
-            Reserva tu cancha en segundos.
+            Reserva tu espacio en{" "}
+            <span className="bg-gradient-to-r from-emerald-500 to-emerald-700 bg-clip-text text-transparent dark:from-emerald-400 dark:to-emerald-600">
+              segundos
+            </span>
+            .
           </h1>
 
           <p className="mt-4 max-w-md text-base leading-relaxed text-slate-600 md:text-lg dark:text-slate-400">

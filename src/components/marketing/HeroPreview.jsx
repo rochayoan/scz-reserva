@@ -1,79 +1,112 @@
-import { Search, ChevronDown, Star, MapPin } from "lucide-react";
+import { Check, ArrowRight, Calendar, Clock, CreditCard } from "lucide-react";
 
-// HeroPreview: mini-mockup del producto que protagoniza el Hero.
-// PRESENTACIONAL y DESACOPLADO a proposito:
-//  - no importa nada de components/booking/ ni de lib/dataService.
-//  - usa data ILUSTRATIVA local (no el catalogo real): es una ilustracion
-//    del producto, no el listado. Cambiar CourtList/dataService no lo afecta.
-//  - se mantiene en sync VISUAL porque usa los mismos tokens del Design System
-//    (radios, colores, bordes, sombras). Ver DESIGN_SYSTEM.md.
-const PREVIEW_COURTS = [
-  { name: "Pentagol", sport: "Fútbol", zone: "Centro", price: 180, rating: 4.8 },
-  { name: "SC Padel Club", sport: "Pádel", zone: "La Madre", price: 120, rating: 4.9 },
-  { name: "La Bombonera", sport: "Fútbol", zone: "Zona Norte", price: 160, rating: 4.6 },
-  { name: "Club de Tenis", sport: "Tenis", zone: "Av. Taruma", price: 110, rating: 4.7 },
+// HeroPreview: mockup tipo ventana del booking flow en 3 pasos.
+// Muestra el flujo de reserva real: servicio → horario → confirmar.
+// Desacoplado del backend — usa data ilustrativa local.
+
+const STEPS = [
+  { icon: Calendar, label: "Servicio", desc: "Fútbol 5" },
+  { icon: Clock, label: "Horario", desc: "Hoy · 19:00" },
+  { icon: CreditCard, label: "Confirmar", desc: "Bs 180" },
 ];
 
-function MiniCourtCard({ court }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-      <div className="relative flex h-14 items-center justify-center bg-gradient-to-br from-emerald-50 to-slate-100 dark:from-emerald-950/40 dark:to-slate-800">
-        <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-semibold text-slate-600 dark:bg-slate-900/80 dark:text-slate-300">
-          {court.sport}
-        </span>
-      </div>
-      <div className="p-2.5">
-        <div className="flex items-center justify-between gap-1">
-          <p className="truncate text-[11px] font-semibold text-slate-900 dark:text-white">
-            {court.name}
-          </p>
-          <span className="flex shrink-0 items-center gap-0.5 text-[10px] font-medium text-slate-700 dark:text-slate-300">
-            <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" strokeWidth={1.75} />
-            {court.rating}
-          </span>
-        </div>
-        <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-slate-500 dark:text-slate-400">
-          <MapPin className="h-2.5 w-2.5" strokeWidth={1.75} />
-          {court.zone}
-        </p>
-        <p className="mt-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-          Bs {court.price}
-        </p>
-      </div>
-    </div>
-  );
-}
+const SPORTS = ["Fútbol", "Pádel", "Tenis"];
+const TIMES = ["18:00", "19:00", "20:00", "21:00"];
 
 export default function HeroPreview() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-950">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
       {/* Window chrome */}
-      <div className="flex items-center gap-1.5 border-b border-slate-100 px-3 py-2.5 dark:border-slate-800">
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-200 dark:bg-slate-700" />
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-200 dark:bg-slate-700" />
-        <span className="h-2.5 w-2.5 rounded-full bg-slate-200 dark:bg-slate-700" />
-        <span className="ml-2 text-[10px] text-slate-400">scz-reserva.app/canchas</span>
+      <div className="flex items-center gap-1.5 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+        <span className="h-3 w-3 rounded-full bg-red-400" />
+        <span className="h-3 w-3 rounded-full bg-amber-400" />
+        <span className="h-3 w-3 rounded-full bg-emerald-400" />
+        <span className="ml-3 text-[11px] font-medium text-slate-400">scz-reserva.app/reservar</span>
       </div>
 
       {/* Body */}
-      <div className="p-3">
-        {/* Mini filter row */}
-        <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-7 flex-1 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-[10px] text-slate-400 dark:border-slate-800">
-            <Search className="h-3 w-3" strokeWidth={1.75} />
-            Buscar cancha o zona...
-          </div>
-          <div className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 px-2 text-[10px] font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400">
-            Zona
-            <ChevronDown className="h-3 w-3" strokeWidth={1.75} />
+      <div className="p-5">
+        {/* Step indicator */}
+        <div className="mb-5 flex items-center gap-1">
+          {STEPS.map((step, i) => (
+            <div key={step.label} className="flex flex-1 items-center gap-1">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+                <step.icon className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" strokeWidth={2} />
+              </div>
+              <span className="hidden truncate text-[10px] font-semibold text-emerald-700 sm:inline dark:text-emerald-300">
+                {step.label}
+              </span>
+              {i < STEPS.length - 1 && (
+                <div className="mx-1 h-px flex-1 bg-emerald-200 dark:bg-emerald-800" />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Step 1: Select sport */}
+        <div className="mb-4">
+          <p className="mb-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            ¿Qué quieres jugar?
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {SPORTS.map((sport) => (
+              <button
+                key={sport}
+                className={`rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
+                  sport === "Fútbol"
+                    ? "border-emerald-700 bg-emerald-700 text-white"
+                    : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                }`}
+              >
+                {sport}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Mini court grid */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {PREVIEW_COURTS.map((court) => (
-            <MiniCourtCard key={court.name} court={court} />
-          ))}
+        {/* Step 2: Select time */}
+        <div className="mb-4">
+          <p className="mb-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            Horarios disponibles
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {TIMES.map((t) => (
+              <button
+                key={t}
+                className={`rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
+                  t === "19:00"
+                    ? "border-emerald-700 bg-emerald-700 text-white"
+                    : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Step 3: Confirm */}
+        <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/20">
+          <div>
+            <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+              Pentagol · Cancha 1
+            </p>
+            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+              Bs 180
+            </p>
+          </div>
+          <button className="flex items-center gap-1 rounded-lg bg-emerald-700 px-4 py-2 text-[11px] font-bold text-white transition-colors hover:bg-emerald-800">
+            Confirmar
+            <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* Success state (small) */}
+        <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-100/50 px-3 py-2 dark:bg-emerald-950/30">
+          <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2.5} />
+          <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
+            Reserva confirmada · Recibirás un código QR
+          </span>
         </div>
       </div>
     </div>

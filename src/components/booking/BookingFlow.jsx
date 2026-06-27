@@ -1,18 +1,94 @@
 import { useState } from "react";
-import { MapPin, Star, Check, QrCode, CheckCircle2 } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
+import { MapPin, Star, Check, QrCode, CheckCircle2, User, Phone } from "lucide-react";
 import { Card, CardContent, Button, SectionLabel, SectionTitle } from "../ui";
+
+const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000001";
+
+function buildSlots(startHour, endHour) {
+  const slots = [];
+  for (let h = startHour; h < endHour; h++) {
+    slots.push(`${String(h).padStart(2, "0")}:00`);
+  }
+  return slots;
+}
 
 export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
   const [bookingDone, setBookingDone] = useState(false);
   const [bookingStep, setBookingStep] = useState(1);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleConfirm = () => {
-    setBookingStep(3);
-    setBookingDone(true);
-    setTimeout(() => {
-      setBookingDone(false);
-      setBookingStep(1);
-    }, 4000);
+  const handleConfirm = async () => {
+    if (!guestName.trim()) {
+      setError("Ingresa tu nombre para reservar");
+      return;
+    }
+    setSaving(true);
+    setError("");
+
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];
+    const [hourStr] = selectedTime.split(":");
+    const hour = parseInt(hourStr, 10);
+
+    const startsAt = new Date(`${todayStr}T${hourStr}:00:00-04:00`);
+    const endsAt = new Date(startsAt);
+    endsAt.setHours(endsAt.getHours() + 1);
+
+    try {
+      // Find the actual court for this venue
+      const { data: courts } = await supabase
+        .from("courts")
+        .select("id, sport")
+        .eq("venue_id", court.id)
+        .eq("is_active", true);
+
+      const sportMap = { "Fútbol": "futbol", "Pádel": "padel", "Tenis": "tenis" };
+      const targetSport = sportMap[court.sport] || court.sport.toLowerCase();
+      const matchingCourt = courts?.find((c) => c.sport === targetSport) || courts?.[0];
+
+      if (!matchingCourt) {
+        setError("No se encontró la cancha en la base de datos");
+        setSaving(false);
+        return;
+      }
+
+      const { error: insertError } = await supabase.from("reservations").insert({
+        organization_id: DEMO_ORG_ID,
+        venue_id: court.id,
+        court_id: matchingCourt.id,
+        guest_name: guestName.trim(),
+        guest_phone: guestPhone.trim() || null,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        status: "pending",
+        price_total: court.price,
+        payment_method: "none",
+        payment_status: "unpaid",
+        notes: "Reservado desde la web",
+      });
+
+      if (insertError) {
+        setError("Error al guardar la reserva: " + insertError.message);
+        setSaving(false);
+        return;
+      }
+
+      setBookingStep(3);
+      setBookingDone(true);
+      setTimeout(() => {
+        setBookingDone(false);
+        setBookingStep(1);
+        setGuestName("");
+        setGuestPhone("");
+      }, 5000);
+    } catch (err) {
+      setError("Error inesperado. Intenta de nuevo.");
+    }
+    setSaving(false);
   };
 
   return (
@@ -119,12 +195,42 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                 ))}
               </div>
               <p className="mb-6 flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span>Selección</span>
+                <span>Datos</span>
                 <span>Pago</span>
                 <span>Confirmación</span>
               </p>
 
-              <h3 className="text-2xl font-bold">Confirmar reserva</h3>
+              {/* Guest Info Form */}
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <User className="h-3.5 w-3.5" strokeWidth={2} />
+                    Tu nombre
+                  </label>
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="Ej: Carlos Rojas"
+                    disabled={bookingDone}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Phone className="h-3.5 w-3.5" strokeWidth={2} />
+                    Teléfono (opcional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    placeholder="Ej: 70000000"
+                    disabled={bookingDone}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700"
+                  />
+                </div>
+              </div>
 
               {/* Summary */}
               <div className="mt-5 space-y-3 text-sm">
@@ -151,30 +257,32 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime }) {
                 <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-slate-800">
                   <QrCode className="h-8 w-8 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
                 </div>
-                <p className="font-bold text-emerald-800 dark:text-emerald-200">Pago QR simulado</p>
+                <p className="font-bold text-emerald-800 dark:text-emerald-200">Pago pendiente</p>
                 <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
-                  Escanea el código o confirma para bloquear tu horario.
+                  El dueño confirmará tu reserva. Paga en el complejo.
                 </p>
               </div>
 
+              {error && (
+                <p className="mt-3 text-sm font-medium text-red-600">{error}</p>
+              )}
+
               {!bookingDone ? (
                 <Button
-                  onClick={() => {
-                    setBookingStep(2);
-                    setTimeout(handleConfirm, 800);
-                  }}
+                  onClick={handleConfirm}
+                  disabled={saving}
                   className="mt-5 w-full py-4 text-base"
                 >
-                  Confirmar reserva
+                  {saving ? "Reservando..." : "Confirmar reserva"}
                 </Button>
               ) : (
                 <div className="mt-5 animate-fade-in-up rounded-2xl bg-emerald-100 p-4 text-center dark:bg-emerald-950/40">
                   <p className="flex items-center justify-center gap-2 text-lg font-bold text-emerald-700 dark:text-emerald-300">
                     <CheckCircle2 className="h-5 w-5" strokeWidth={1.75} />
-                    ¡Reserva confirmada!
+                    ¡Reserva creada!
                   </p>
                   <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-400">
-                    Te esperamos hoy a las {selectedTime} en {court.name}
+                    {guestName}, te esperamos hoy a las {selectedTime} en {court.name}
                   </p>
                 </div>
               )}
