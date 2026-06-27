@@ -51,7 +51,7 @@ Sub-áreas de la fase: Marketing · Admin · Booking · Mobile · Ajustes visual
 - ✅ Fundación del Design System — tokens (`index.css`), componentes base (`ui.jsx`), `DESIGN_SYSTEM.md` — commit `3f9bbcf`.
 - ✅ Hero rediseñado con product preview desacoplado — commit `52d50d6`.
 - ✅ CourtList (filtros + cards) migrado al DS + `SegmentedControl` extraído — commit `057e7ab`.
-- ✅ **F1 — 5 secciones de marketing migradas al DS** (ProblemSection, SolutionSection, HowItWorks, BenefitsSection, CTASection): emoji → iconos lucide, `font-black` → `font-bold`, fix de bug de animación escalonada, `CTASection` con `rounded-3xl` y botones sin override de radio — commit pendiente de hash (ver punto 8 tras commit).
+- ✅ **F1 — 5 secciones de marketing migradas al DS** (ProblemSection, SolutionSection, HowItWorks, BenefitsSection, CTASection): emoji → iconos lucide, `font-black` → `font-bold`, fix de bug de animación escalonada, `CTASection` con `rounded-3xl` y botones sin override de radio — commit `a809d07`.
 
 ---
 
@@ -93,6 +93,7 @@ Sub-áreas de la fase: Marketing · Admin · Booking · Mobile · Ajustes visual
 
 | Hash | Mensaje |
 |---|---|
+| `a809d07` | polish: migrate marketing sections to design system |
 | `057e7ab` | polish: migrate court list and filters to design system |
 | `52d50d6` | polish: redesign hero with product preview |
 | `3f9bbcf` | feat: establish design system foundation |
