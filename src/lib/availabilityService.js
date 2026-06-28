@@ -16,24 +16,52 @@ function buildHourlySlots(openTime, closeTime) {
 
 /**
  * Obtiene los slots disponibles para una cancha en una fecha específica.
+ * Acepta court_id (UUID de cancha) o venue_id (UUID de complejo).
  * Calcula: horarios_de_apertura - reservas_existentes
  */
-export async function getAvailableSlots(courtId, date) {
+export async function getAvailableSlots(courtOrVenueId, date) {
   const dayOfWeek = date.getDay(); // 0=domingo ... 6=sábado
 
-  // 1. Obtener operating hours para ese día
+  // Obtener court_ids: si es venue, buscar todas sus canchas
+  let courtIds = [courtOrVenueId];
+
+  // Verificar si es un venue (los venues son UUIDs que aparecen en la tabla venues)
+  const { data: venueCheck } = await supabase
+    .from("venues")
+    .select("id")
+    .eq("id", courtOrVenueId)
+    .limit(1);
+
+  if (venueCheck && venueCheck.length > 0) {
+    // Es un venue, obtener todas sus canchas activas
+    const { data: courts } = await supabase
+      .from("courts")
+      .select("id")
+      .eq("venue_id", courtOrVenueId)
+      .eq("is_active", true);
+
+    if (!courts || courts.length === 0) return [];
+    courtIds = courts.map((c) => c.id);
+  }
+
+  // 1. Obtener operating hours para ese día para todas las canchas
   const { data: hours } = await supabase
     .from("court_operating_hours")
-    .select("*")
-    .eq("court_id", courtId)
+    .select("court_id, open_time, close_time")
+    .in("court_id", courtIds)
     .eq("day_of_week", dayOfWeek);
 
   if (!hours || hours.length === 0) return [];
 
-  // 2. Construir todos los slots posibles
-  const allSlots = hours.flatMap((h) => buildHourlySlots(h.open_time, h.close_time));
+  // Agrupar slots por cancha y tomar la que más horas tenga
+  const allSlotsSet = new Set();
+  for (const h of hours) {
+    const slots = buildHourlySlots(h.open_time, h.close_time);
+    for (const s of slots) allSlotsSet.add(s);
+  }
+  const allSlots = [...allSlotsSet].sort();
 
-  // 3. Obtener reservas existentes para esa cancha en esa fecha
+  // 2. Obtener reservas existentes para todas estas canchas en esa fecha
   const dayStart = new Date(date);
   dayStart.setHours(0, 0, 0, 0);
   const dayEnd = new Date(date);
@@ -42,12 +70,12 @@ export async function getAvailableSlots(courtId, date) {
   const { data: reservations } = await supabase
     .from("reservations")
     .select("starts_at, ends_at")
-    .eq("court_id", courtId)
+    .in("court_id", courtIds)
     .in("status", ["pending", "confirmed"])
     .gte("starts_at", dayStart.toISOString())
     .lte("starts_at", dayEnd.toISOString());
 
-  // 4. Marcar slots ocupados
+  // 3. Marcar slots ocupados
   const busySlots = new Set();
   if (reservations) {
     for (const r of reservations) {
@@ -59,7 +87,7 @@ export async function getAvailableSlots(courtId, date) {
     }
   }
 
-  // 5. Devolver solo slots libres
+  // 4. Devolver solo slots libres
   return allSlots.filter((slot) => !busySlots.has(slot));
 }
 
