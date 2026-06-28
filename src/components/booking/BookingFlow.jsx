@@ -206,7 +206,31 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                     )}
                   </div>
 
-                  <div className="mt-6 flex items-center justify-between rounded-2xl bg-emerald-50 p-4 dark:bg-emerald-950/20">
+                  {/* Duration selector */}
+                  {selectedTime && (
+                    <div className="mt-4">
+                      <p className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                        Duración
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {DURATIONS.map((d) => (
+                          <button
+                            key={d.value}
+                            onClick={() => setDuration(d.value)}
+                            className={`flex h-10 cursor-pointer items-center justify-center rounded-xl border px-4 text-sm font-semibold transition-colors ${
+                              duration === d.value
+                                ? "border-emerald-700 bg-emerald-700 text-white"
+                                : "border-slate-200 hover:border-emerald-400 dark:border-slate-700"
+                            }`}
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex items-center justify-between rounded-2xl bg-emerald-50 p-4 dark:bg-emerald-950/20">
                     <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Precio por hora</span>
                     <span className="text-2xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
                       Bs {court.price}
@@ -293,11 +317,15 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                 </div>
                 <div className="flex justify-between border-b border-slate-100 py-2 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400">Horario</span>
-                  <b>Hoy · {selectedTime}</b>
+                  <b>Hoy · {selectedTime} → {endTime}</b>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 py-2 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400">Duración</span>
+                  <b>{duration}h</b>
                 </div>
                 <div className="flex justify-between py-2">
                   <span className="text-slate-500 dark:text-slate-400">Total</span>
-                  <b className="text-lg tabular-nums text-emerald-700 dark:text-emerald-400">Bs {court.price}</b>
+                  <b className="text-lg tabular-nums text-emerald-700 dark:text-emerald-400">Bs {totalPrice}</b>
                 </div>
               </div>
 
@@ -316,7 +344,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                       Escanea para pagar
                     </p>
                     <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                      Paga desde tu app del banco <strong>Bs {court.price}</strong>
+                      Paga desde tu app del banco <strong>Bs {totalPrice}</strong>
                     </p>
                   </div>
                 ) : (
