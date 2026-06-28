@@ -330,22 +330,27 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
               </div>
 
               {/* QR de pago */}
-              <div className="mt-6 rounded-2xl border border-dashed border-emerald-400 bg-emerald-50 p-5 text-center dark:border-emerald-700 dark:bg-emerald-950/20">
+              <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center dark:border-emerald-700 dark:bg-emerald-950/20">
                 {court.qr_image_url ? (
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex flex-col items-center gap-4">
+                    <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                      Paga con QR
+                    </p>
                     <img
                       src={court.qr_image_url}
                       alt="QR de pago"
-                      className="h-36 w-36 rounded-xl border-2 border-white bg-white shadow-sm"
-                      onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }}
+                      className="h-52 w-52 rounded-xl border-4 border-white bg-white shadow-lg"
                     />
-                    <p className="hidden text-xs text-red-500">No se pudo cargar el QR</p>
-                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                      Escanea para pagar
+                    <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                      Escanea con tu app del banco
                     </p>
-                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                      Paga desde tu app del banco <strong>Bs {totalPrice}</strong>
-                    </p>
+                    <div className="flex items-center gap-4 text-xs text-emerald-600 dark:text-emerald-400">
+                      <span className="flex items-center gap-1">
+                        <strong className="text-sm">Bs {totalPrice}</strong>
+                      </span>
+                      <span className="text-emerald-300">·</span>
+                      <span>{court.name}</span>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
