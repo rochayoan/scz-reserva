@@ -71,7 +71,7 @@ export default function Header({ dark, setDark }) {
           </button>
 
           {/* Reservar ahora */}
-          <Button>
+          <Button onClick={() => document.getElementById("canchas")?.scrollIntoView({ behavior: "smooth" })}>
             Reservar ahora
           </Button>
 
@@ -112,7 +112,7 @@ export default function Header({ dark, setDark }) {
               <LogIn className="h-4 w-4" strokeWidth={1.75} />
               Soy dueño
             </Link>
-            <Button className="mt-2 w-full text-sm">
+            <Button className="mt-2 w-full text-sm" onClick={() => { setMobileOpen(false); document.getElementById("canchas")?.scrollIntoView({ behavior: "smooth" }); }}>
               Reservar ahora
             </Button>
           </nav>
