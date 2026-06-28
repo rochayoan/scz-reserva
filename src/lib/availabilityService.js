@@ -1,23 +1,36 @@
 import { supabase } from "./supabaseClient";
 
 /**
- * Genera slots de hora en punto entre open_time y close_time.
- * Ej: "08:00" a "17:00" → ["08:00", "09:00", ..., "16:00"]
+ * Genera slots de 30 minutos entre open_time y close_time.
+ * Ej: "08:00" a "17:00" → ["08:00","08:30","09:00",...,"16:30"]
  */
-function buildHourlySlots(openTime, closeTime) {
-  const openHour = parseInt(openTime.slice(0, 2), 10);
-  const closeHour = parseInt(closeTime.slice(0, 2), 10);
+function buildSlots(openTime, closeTime) {
+  const [openH, openM] = openTime.split(":").map(Number);
+  const [closeH, closeM] = closeTime.split(":").map(Number);
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
   const slots = [];
-  for (let h = openHour; h < closeHour; h++) {
-    slots.push(`${String(h).padStart(2, "0")}:00`);
+  for (let m = openMinutes; m < closeMinutes; m += 30) {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    slots.push(`${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`);
   }
   return slots;
 }
 
 /**
- * Obtiene los slots disponibles para una cancha en una fecha específica.
+ * Convierte un string "HH:MM" a minutos desde medianoche.
+ */
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
+}
+
+/**
+ * Obtiene los slots disponibles para una cancha/complejo en una fecha específica.
  * Acepta court_id (UUID de cancha) o venue_id (UUID de complejo).
  * Calcula: horarios_de_apertura - reservas_existentes
+ * Devuelve slots de 30 minutos.
  */
 export async function getAvailableSlots(courtOrVenueId, date) {
   const dayOfWeek = date.getDay(); // 0=domingo ... 6=sábado
@@ -25,7 +38,6 @@ export async function getAvailableSlots(courtOrVenueId, date) {
   // Obtener court_ids: si es venue, buscar todas sus canchas
   let courtIds = [courtOrVenueId];
 
-  // Verificar si es un venue (los venues son UUIDs que aparecen en la tabla venues)
   const { data: venueCheck } = await supabase
     .from("venues")
     .select("id")
@@ -33,7 +45,6 @@ export async function getAvailableSlots(courtOrVenueId, date) {
     .limit(1);
 
   if (venueCheck && venueCheck.length > 0) {
-    // Es un venue, obtener todas sus canchas activas
     const { data: courts } = await supabase
       .from("courts")
       .select("id")
@@ -53,10 +64,10 @@ export async function getAvailableSlots(courtOrVenueId, date) {
 
   if (!hours || hours.length === 0) return [];
 
-  // Agrupar slots por cancha y tomar la que más horas tenga
+  // Generar todos los slots de 30 min combinados de todas las canchas
   const allSlotsSet = new Set();
   for (const h of hours) {
-    const slots = buildHourlySlots(h.open_time, h.close_time);
+    const slots = buildSlots(h.open_time, h.close_time);
     for (const s of slots) allSlotsSet.add(s);
   }
   const allSlots = [...allSlotsSet].sort();
@@ -75,14 +86,17 @@ export async function getAvailableSlots(courtOrVenueId, date) {
     .gte("starts_at", dayStart.toISOString())
     .lte("starts_at", dayEnd.toISOString());
 
-  // 3. Marcar slots ocupados
+  // 3. Marcar slots ocupados (cualquier slot que CAIGA dentro de [start, end) )
   const busySlots = new Set();
   if (reservations) {
     for (const r of reservations) {
-      const startHour = new Date(r.starts_at).getHours();
-      const endHour = new Date(r.ends_at).getHours();
-      for (let h = startHour; h < endHour; h++) {
-        busySlots.add(`${String(h).padStart(2, "0")}:00`);
+      const startMin = new Date(r.starts_at).getHours() * 60 + new Date(r.starts_at).getMinutes();
+      const endMin = new Date(r.ends_at).getHours() * 60 + new Date(r.ends_at).getMinutes();
+      for (const slot of allSlots) {
+        const slotMin = timeToMinutes(slot);
+        if (slotMin >= startMin && slotMin < endMin) {
+          busySlots.add(slot);
+        }
       }
     }
   }
@@ -92,61 +106,18 @@ export async function getAvailableSlots(courtOrVenueId, date) {
 }
 
 /**
- * Obtiene venues + canchas con disponibilidad calculada para hoy.
- * Usado por el frontend público.
+ * Verifica si un rango [startTime, endTime) está completamente disponible
+ * dentro de los slots libres.
  */
-export async function getVenuesWithAvailability(date = new Date()) {
-  const { data: venues } = await supabase
-    .from("venues")
-    .select(
-      `
-      id, name, zone, image_url, rating,
-      courts (
-        id, name, sport, category, price_per_hour, surface,
-        venue_id, organization_id
-      )
-    `
-    )
-    .eq("is_active", true);
-
-  if (!venues) return [];
-
-  const result = [];
-
-  for (const venue of venues) {
-    if (!venue.courts || venue.courts.length === 0) continue;
-
-    const courtsWithSlots = [];
-
-    for (const court of venue.courts) {
-      const availableSlots = await getAvailableSlots(court.id, date);
-      courtsWithSlots.push({
-        ...court,
-        availableSlots,
-        hasAvailability: availableSlots.length > 0,
-      });
-    }
-
-    // Usar la cancha más barata como representativa
-    const rep = courtsWithSlots.reduce((cheapest, c) =>
-      Number(c.price_per_hour) < Number(cheapest.price_per_hour) ? c : cheapest
-    );
-
-    result.push({
-      id: venue.id,
-      name: venue.name,
-      zone: venue.zone || "",
-      image: venue.image_url || "",
-      rating: venue.rating,
-      sport: rep.sport,
-      category: rep.category || "",
-      price: Number(rep.price_per_hour),
-      fields: courtsWithSlots.length,
-      times: rep.availableSlots,
-      featured: false,
-      courts: courtsWithSlots,
-    });
+export function isRangeAvailable(availableSlots, startTime, endTime) {
+  const startMin = timeToMinutes(startTime);
+  const endMin = timeToMinutes(endTime);
+  // Cada slot de 30 min dentro del rango debe estar disponible
+  for (let m = startMin; m < endMin; m += 30) {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    const slot = `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+    if (!availableSlots.includes(slot)) return false;
   }
-
-  return result;
+  return true;
 }

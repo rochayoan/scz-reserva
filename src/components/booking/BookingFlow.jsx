@@ -10,6 +10,28 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
   const [guestPhone, setGuestPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [duration, setDuration] = useState(1); // horas
+
+  const DURATIONS = [
+    { value: 1, label: "1h" },
+    { value: 1.5, label: "1.5h" },
+    { value: 2, label: "2h" },
+    { value: 2.5, label: "2.5h" },
+    { value: 3, label: "3h" },
+  ];
+
+  // Calcular hora de fin y precio
+  const calcEndTime = () => {
+    if (!selectedTime) return null;
+    const [h, m] = selectedTime.split(":").map(Number);
+    const totalMin = h * 60 + m + duration * 60;
+    const endH = Math.floor(totalMin / 60);
+    const endM = totalMin % 60;
+    return `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+  };
+
+  const endTime = calcEndTime();
+  const totalPrice = court.price ? court.price * duration : 0;
 
   const handleConfirm = async () => {
     if (!guestName.trim()) {
@@ -22,11 +44,13 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
     const [hourStr] = selectedTime.split(":");
+    const [minStr] = selectedTime.split(":").slice(1);
     const hour = parseInt(hourStr, 10);
+    const min = parseInt(minStr, 10);
 
-    const startsAt = new Date(`${todayStr}T${hourStr}:00:00-04:00`);
+    const startsAt = new Date(`${todayStr}T${selectedTime}:00-04:00`);
     const endsAt = new Date(startsAt);
-    endsAt.setHours(endsAt.getHours() + 1);
+    endsAt.setMinutes(endsAt.getMinutes() + duration * 60);
 
     try {
       // Find the actual court for this venue
@@ -55,14 +79,18 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
         starts_at: startsAt.toISOString(),
         ends_at: endsAt.toISOString(),
         status: "pending",
-        price_total: court.price,
+        price_total: totalPrice,
         payment_method: "none",
         payment_status: "unpaid",
-        notes: "Reservado desde la web",
+        notes: `Reservado desde la web (${duration}h)`,
       });
 
       if (insertError) {
-        setError("Error al guardar la reserva: " + insertError.message);
+        if (insertError.message?.includes("reservations_no_overlap")) {
+          setError("Este horario ya fue reservado. Por favor elige otro horario.");
+        } else {
+          setError("Error al guardar la reserva: " + insertError.message);
+        }
         setSaving(false);
         return;
       }
@@ -79,7 +107,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
             guestPhone: guestPhone.trim() || null,
             startsAt: startsAt.toISOString(),
             endsAt: endsAt.toISOString(),
-            price: court.price,
+            price: totalPrice,
             status: "pending",
           }),
         });
@@ -89,7 +117,6 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
 
       setBookingStep(3);
       setBookingDone(true);
-      // NO auto-reset - el QR debe quedar visible para que paguen
     } catch (err) {
       setError("Error inesperado. Intenta de nuevo.");
     }
