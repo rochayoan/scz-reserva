@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Save, ExternalLink, Clock } from "lucide-react";
+import { RefreshCw, Save, ExternalLink, Clock, QrCode, Image } from "lucide-react";
 import { Card, CardContent, Button } from "../ui";
 import { useAuth } from "../../lib/AuthContext";
 import { getOrganization, updateOrganization } from "../../lib/adminSupabase";
@@ -24,6 +24,7 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
+  const [qrUrl, setQrUrl] = useState("");
   const [saved, setSaved] = useState(false);
 
   const load = async () => {
@@ -32,6 +33,7 @@ export default function AdminSettings() {
     if (data) {
       setOrg(data);
       setName(data.name ?? "");
+      setQrUrl(data.qr_image_url ?? "");
     }
     setLoading(false);
   };
@@ -42,7 +44,10 @@ export default function AdminSettings() {
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await updateOrganization(org.id, { name });
+    const { error } = await updateOrganization(org.id, {
+      name,
+      qr_image_url: qrUrl || null,
+    });
     if (!error) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -100,6 +105,56 @@ export default function AdminSettings() {
               <Save className="mr-1.5 h-4 w-4" />
               {saving ? "Guardando..." : saved ? "✓ Guardado" : "Guardar cambios"}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* QR de pago */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-sm">
+              <QrCode className="h-6 w-6 text-white" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-slate-800">QR de pago</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Los clientes verán este QR al confirmar su reserva para que puedan pagar escaneando
+              </p>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                    <Image className="h-3.5 w-3.5" />
+                    URL de la imagen QR
+                  </label>
+                  <input
+                    value={qrUrl}
+                    onChange={(e) => setQrUrl(e.target.value)}
+                    placeholder="https://ejemplo.com/mi-qr.png"
+                    className="h-11 w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-mono text-xs"
+                  />
+                  <p className="mt-1.5 text-xs text-slate-400">
+                    Sube tu QR a Imgur, Cloudinary o cualquier hosting y pega el enlace aquí
+                  </p>
+                </div>
+
+                {qrUrl && (
+                  <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white p-6">
+                    <p className="text-xs font-semibold text-slate-500">Vista previa</p>
+                    <img
+                      src={qrUrl}
+                      alt="QR de pago"
+                      className="h-40 w-40 rounded-xl border border-slate-100 object-contain"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "block";
+                      }}
+                    />
+                    <p className="hidden text-xs text-red-500">No se pudo cargar la imagen</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
