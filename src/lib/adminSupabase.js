@@ -14,6 +14,7 @@ export async function getDashboardKPIs(orgId) {
     { count: totalCourts },
     { data: todayReservations, error: rErr },
     { data: allReservations, error: aErr },
+    { data: allToday },
   ] = await Promise.all([
     supabase
       .from("courts")
@@ -31,6 +32,13 @@ export async function getDashboardKPIs(orgId) {
       .select("*")
       .eq("organization_id", orgId)
       .in("status", ["confirmed", "pending"]),
+    supabase
+      .from("reservations")
+      .select("*, venues!inner(name), courts!inner(name, sport)")
+      .eq("organization_id", orgId)
+      .gte("starts_at", todayStart.toISOString())
+      .lte("starts_at", todayEnd.toISOString())
+      .order("starts_at"),
   ]);
 
   if (rErr || aErr) return null;
@@ -39,11 +47,26 @@ export async function getDashboardKPIs(orgId) {
     .filter((r) => r.payment_status === "paid")
     .reduce((sum, r) => sum + Number(r.price_total), 0);
 
+  const todayPotential = (todayReservations ?? [])
+    .reduce((sum, r) => sum + Number(r.price_total), 0);
+
+  const arrived = (todayReservations ?? []).filter(
+    (r) => r.status === "checked_in" || r.status === "completed"
+  ).length;
+
   return {
     todayRevenue,
+    todayPotential,
+    todayCount: (todayReservations ?? []).length,
+    arrived,
     activeReservations: (allReservations ?? []).length,
     totalCourts: totalCourts ?? 0,
-    todayCount: (todayReservations ?? []).length,
+    todayReservations: (allToday ?? []).map((r) => ({
+      ...r,
+      venue_name: r.venues?.name ?? "—",
+      court_name: r.courts?.name ?? "—",
+      court_sport: r.courts?.sport ?? "—",
+    })),
   };
 }
 
@@ -71,6 +94,14 @@ export async function updateReservationStatus(id, status) {
   const { error } = await supabase
     .from("reservations")
     .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  return { error };
+}
+
+export async function updatePaymentStatus(id, paymentStatus) {
+  const { error } = await supabase
+    .from("reservations")
+    .update({ payment_status: paymentStatus, updated_at: new Date().toISOString() })
     .eq("id", id);
   return { error };
 }

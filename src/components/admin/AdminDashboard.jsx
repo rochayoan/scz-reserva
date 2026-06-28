@@ -1,290 +1,319 @@
 import { useState, useEffect } from "react";
-import { Wallet, CalendarCheck, Gauge, Building2, RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Wallet, CalendarCheck, Building2, Gauge,
+  RefreshCw, TrendingUp, Clock, CheckCircle2,
+  DollarSign, User, AlertTriangle, ArrowRight,
+  CreditCard, LogIn
+} from "lucide-react";
 import { Card, CardContent } from "../ui";
 import { useAuth } from "../../lib/AuthContext";
-import { getDashboardKPIs, getAdminReservations } from "../../lib/adminSupabase";
-
-function TrendBadge({ value }) {
-  if (value === undefined || value === null || value === 0) return null;
-  const isUp = value > 0;
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-      isUp ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-    }`}>
-      {isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-      {Math.abs(value)}%
-    </span>
-  );
-}
-
-function StatusBadge({ status }) {
-  const styles = {
-    confirmed: "bg-emerald-100 text-emerald-700",
-    pending: "bg-amber-100 text-amber-700",
-    completed: "bg-blue-100 text-blue-700",
-    cancelled: "bg-red-100 text-red-700",
-    checked_in: "bg-indigo-100 text-indigo-700",
-  };
-  const labels = {
-    confirmed: "Confirmada",
-    pending: "Pendiente",
-    completed: "Completada",
-    cancelled: "Cancelada",
-    checked_in: "Jugando",
-  };
-  return (
-    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${styles[status] || "bg-slate-100 text-slate-600"}`}>
-      {labels[status] || status}
-    </span>
-  );
-}
+import { getDashboardKPIs, updateReservationStatus, updatePaymentStatus } from "../../lib/adminSupabase";
 
 export default function AdminDashboard() {
   const { orgId } = useAuth();
+  const navigate = useNavigate();
   const [kpis, setKpis] = useState(null);
-  const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
 
   const load = async () => {
     setLoading(true);
-    const [k, r] = await Promise.all([
-      getDashboardKPIs(orgId),
-      getAdminReservations(orgId),
-    ]);
+    const k = await getDashboardKPIs(orgId);
     setKpis(k);
-    setRecent(r.slice(0, 6));
     setLoading(false);
   };
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
+
+  const handleArrived = async (id) => {
+    setActionLoading("arrived-" + id);
+    await updateReservationStatus(id, "checked_in");
+    await load();
+    setActionLoading(null);
+  };
+
+  const handlePaid = async (id) => {
+    setActionLoading("paid-" + id);
+    await updatePaymentStatus(id, "paid");
+    await load();
+    setActionLoading(null);
+  };
+
+  const todayReservations = kpis?.todayReservations || [];
+  const upcoming = todayReservations.filter(
+    (r) => r.status !== "cancelled" && r.status !== "completed"
+  );
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" strokeWidth={2} />
+        <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
       </div>
     );
   }
 
-  const kpiCards = [
-    {
-      label: "Ingresos del día",
-      value: `Bs ${(kpis?.todayRevenue ?? 0).toLocaleString()}`,
-      sub: `${kpis?.todayCount ?? 0} reservas hoy`,
-      trend: kpis?.revenueTrend,
-      icon: Wallet,
-      iconBg: "bg-gradient-to-br from-emerald-500 to-emerald-600",
-    },
-    {
-      label: "Reservas activas",
-      value: String(kpis?.activeReservations ?? 0),
-      sub: "Confirmadas + pendientes",
-      trend: kpis?.reservationTrend,
-      icon: CalendarCheck,
-      iconBg: "bg-gradient-to-br from-blue-500 to-blue-600",
-    },
-    {
-      label: "Canchas activas",
-      value: String(kpis?.totalCourts ?? 0),
-      sub: "En tu complejo",
-      icon: Building2,
-      iconBg: "bg-gradient-to-br from-amber-500 to-amber-600",
-    },
-    {
-      label: "Ocupación estimada",
-      value: kpis?.totalCourts
-        ? `${Math.round(((kpis?.activeReservations ?? 0) / (kpis?.totalCourts * 12)) * 100)}%`
-        : "—",
-      sub: "Slots ocupados vs disponibles",
-      icon: Gauge,
-      iconBg: "bg-gradient-to-br from-violet-500 to-violet-600",
-    },
-  ];
-
-  const upcoming = recent.filter((r) => r.status === "confirmed" || r.status === "pending").slice(0, 4);
-
   return (
     <div>
+      {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-800">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">Resumen de tu complejo deportivo</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {new Date().toLocaleDateString("es-BO", {
+              weekday: "long", day: "numeric", month: "long", year: "numeric",
+            })}
+          </p>
         </div>
-        <button
-          onClick={load}
-          className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-500 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md hover:text-slate-700"
-        >
-          <RefreshCw className="h-4 w-4 transition-transform duration-700 group-hover:rotate-180" strokeWidth={1.75} />
+        <button onClick={load}
+          className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-md">
+          <RefreshCw className={`h-4 w-4 transition-transform duration-700 ${loading ? "animate-spin" : "group-hover:rotate-180"}`} />
           Actualizar
         </button>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {kpiCards.map((kpi) => {
-          const KpiIcon = kpi.icon;
-          return (
-            <div key={kpi.label} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md">
-              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-transparent via-transparent to-emerald-50/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-500">{kpi.label}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <p className="text-3xl font-bold tracking-tight text-slate-800 tabular-nums">{kpi.value}</p>
-                    {kpi.trend !== undefined && <TrendBadge value={kpi.trend} />}
-                  </div>
-                  <p className="mt-1 text-xs text-slate-400">{kpi.sub}</p>
-                </div>
-                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm ${kpi.iconBg}`}>
-                  <KpiIcon className="h-6 w-6 text-white" strokeWidth={1.5} />
-                </div>
-              </div>
+      {/* KPI Cards */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-500">Ingresos hoy</p>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
+              <Wallet className="h-4 w-4 text-emerald-700" />
             </div>
-          );
-        })}
+          </div>
+          <p className="mt-2 text-2xl font-bold text-slate-800 tabular-nums">
+            Bs {kpis?.todayRevenue?.toLocaleString() ?? 0}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-400">
+            Cobrado ·{" "}
+            <span className="text-slate-500">
+              Bs {kpis?.todayPotential?.toLocaleString() ?? 0} potencial
+            </span>
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-500">Reservas hoy</p>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100">
+              <CalendarCheck className="h-4 w-4 text-blue-700" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-bold text-slate-800 tabular-nums">
+            {upcoming.length}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-400">
+            {kpis?.arrived ?? 0} llegaron · {kpis?.todayCount ?? 0} total
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-500">Canchas</p>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
+              <Building2 className="h-4 w-4 text-amber-700" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-bold text-slate-800 tabular-nums">
+            {kpis?.totalCourts ?? 0}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-400">Activas en tu complejo</p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-500">Ocupación hoy</p>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
+              <Gauge className="h-4 w-4 text-violet-700" />
+            </div>
+          </div>
+          <p className="mt-2 text-2xl font-bold text-slate-800 tabular-nums">
+            {kpis?.totalCourts && kpis?.todayCount
+              ? `${Math.round((kpis.todayCount / (kpis.totalCourts * 12)) * 100)}%`
+              : "—"}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-400">
+            Slots ocupados vs disponibles
+          </p>
+        </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <div>
-                  <h3 className="text-base font-bold text-slate-800">Reservas recientes</h3>
-                  <p className="text-xs text-slate-400">Últimas reservas registradas</p>
-                </div>
-              </div>
-              {recent.length === 0 ? (
-                <p className="py-12 text-center text-sm text-slate-400">No hay reservas aún</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[500px] text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-50">
-                        {["Cliente", "Cancha", "Fecha", "Monto", "Estado"].map((h) => (
-                          <th key={h} className="px-6 pb-3 pt-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recent.map((r) => (
-                        <tr key={r.id} className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50/50">
-                          <td className="px-6 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-xs font-bold text-emerald-700">
-                                {(r.guest_name || "??").split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                              </div>
-                              <span className="font-medium text-slate-700">{r.guest_name || "—"}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-3 text-slate-500">{r.court_name}</td>
-                          <td className="px-6 py-3 text-slate-500 tabular-nums">
-                            {new Date(r.starts_at).toLocaleDateString("es-BO", { day: "numeric", month: "short"})}{" "}
-                            <span className="text-slate-400">{new Date(r.starts_at).toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit"})}</span>
-                          </td>
-                          <td className="px-6 py-3 font-semibold text-slate-700 tabular-nums">
-                            Bs {Number(r.price_total).toLocaleString()}
-                          </td>
-                          <td className="px-6 py-3"><StatusBadge status={r.status} /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+      {/* Today's reservations */}
+      <Card className="mb-8">
+        <CardContent className="p-0">
+          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-800">
+                📅 Reservas de hoy
+              </h3>
+              <p className="text-xs text-slate-400">
+                {upcoming.length} pendientes ·{" "}
+                {todayReservations.filter((r) => r.status === "checked_in").length} llegaron ·{" "}
+                {todayReservations.filter((r) => r.payment_status === "paid").length} pagaron
+              </p>
+            </div>
+          </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-0">
-              <div className="border-b border-slate-100 px-5 py-4">
-                <h3 className="text-base font-bold text-slate-800">Próximas</h3>
-                <p className="text-xs text-slate-400">En las próximas horas</p>
-              </div>
-              <div className="divide-y divide-slate-50 px-5 py-2">
-                {upcoming.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-slate-400">Sin próximas reservas</p>
-                ) : (
-                  upcoming.map((r) => (
-                    <div key={r.id} className="flex items-center gap-3 py-3">
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
-                        r.status === "confirmed" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                      }`}>
-                        {new Date(r.starts_at).getHours()}
+          {todayReservations.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <CalendarCheck className="mx-auto h-8 w-8 text-slate-300" />
+              <p className="mt-3 text-sm font-bold text-slate-500">Sin reservas hoy</p>
+              <p className="mt-1 text-xs text-slate-400">Los clientes pueden reservar desde la web</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50">
+              {todayReservations.map((r) => {
+                const start = new Date(r.starts_at);
+                const end = new Date(r.ends_at);
+                const now = new Date();
+                const minsUntilStart = Math.round((start - now) / 60000);
+                const isHappening = minsUntilStart <= 0 && end > now;
+                const isSoon = minsUntilStart > 0 && minsUntilStart <= 120;
+                const isPast = end < now;
+
+                return (
+                  <div
+                    key={r.id}
+                    className={`px-6 py-4 transition-colors ${
+                      isHappening ? "bg-emerald-50/80" : isSoon ? "bg-amber-50/60" : "hover:bg-slate-50/50"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Time */}
+                      <div className="flex shrink-0 flex-col items-center rounded-xl bg-slate-100 px-3 py-2 min-w-[64px]">
+                        <span className="text-lg font-black text-slate-700 tabular-nums leading-none">
+                          {start.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <span className="mt-0.5 text-[10px] text-slate-400">
+                          {end.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
                       </div>
+
+                      {/* Info */}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-slate-700 truncate">{r.court_name}</p>
-                        <p className="text-xs text-slate-400 truncate">
-                          {new Date(r.starts_at).toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" })}
-                          {" — "}
-                          {new Date(r.ends_at).toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" })}
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-[10px] font-bold text-emerald-700">
+                            {(r.guest_name || "??").split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                          </div>
+                          <p className="font-semibold text-slate-700 truncate">{r.guest_name}</p>
+                          {r.status === "checked_in" && (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+                              ✅ Llegó
+                            </span>
+                          )}
+                          {r.payment_status === "paid" && (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                              💰 Pagó
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          {r.court_name} · {r.venue_name}
                         </p>
                       </div>
-                      <StatusBadge status={r.status} />
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="p-5">
-              <h3 className="mb-3 text-base font-bold text-slate-800">Canchas ahora</h3>
-              {kpis?.totalCourts === 0 ? (
-                <p className="py-4 text-center text-sm text-slate-400">Sin canchas registradas</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {recent.length === 0 ? (
-                    <div className="col-span-2 py-4 text-center text-sm text-slate-400">
-                      Sin actividad ahora
-                    </div>
-                  ) : (
-                    Array.from(
-                      new Map(
-                        recent
-                          .filter((r) => ["confirmed", "pending"].includes(r.status))
-                          .map((r) => [r.court_name, r])
-                      ).entries()
-                    )
-                      .slice(0, 6)
-                      .map(([name, r]) => (
-                        <div
-                          key={r.id}
-                          className={`rounded-xl border p-3 text-center transition-all ${
-                            r.status === "confirmed"
-                              ? "border-emerald-200 bg-emerald-50"
-                              : "border-amber-200 bg-amber-50"
-                          }`}
-                        >
-                          <p className="text-xs font-semibold text-slate-600 truncate">{name}</p>
-                          <p className={`mt-1 text-[11px] font-semibold ${
-                            r.status === "confirmed" ? "text-emerald-600" : "text-amber-600"
-                          }`}>
-                            {r.status === "confirmed" ? "🔴 Ocupada" : "🟡 Pendiente"}
-                          </p>
-                          <p className="mt-0.5 text-[10px] text-slate-400">
-                            {new Date(r.starts_at).toLocaleTimeString("es-BO", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                            {" — "}
-                            {new Date(r.ends_at).toLocaleTimeString("es-BO", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </p>
+                      {/* Price */}
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-bold text-slate-700 tabular-nums">
+                          Bs {Number(r.price_total).toLocaleString()}
+                        </p>
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          r.status === "pending" ? "bg-amber-100 text-amber-700" :
+                          r.status === "confirmed" ? "bg-blue-100 text-blue-700" :
+                          "bg-slate-100 text-slate-600"
+                        }`}>
+                          {r.status === "pending" ? "Pendiente" :
+                           r.status === "confirmed" ? "Confirmada" :
+                           r.status === "checked_in" ? "Jugando" : r.status}
+                        </span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-1.5 shrink-0">
+                        {r.status !== "cancelled" && r.status !== "checked_in" && r.status !== "completed" && (
+                          <>
+                            <button
+                              onClick={() => handleArrived(r.id)}
+                              disabled={actionLoading === "arrived-" + r.id}
+                              className="flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50"
+                            >
+                              <LogIn className="h-3.5 w-3.5" />
+                              Llegó
+                            </button>
+                            {r.payment_status !== "paid" && (
+                              <button
+                                onClick={() => handlePaid(r.id)}
+                                disabled={actionLoading === "paid-" + r.id}
+                                className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50"
+                              >
+                                <DollarSign className="h-3.5 w-3.5" />
+                                Pagó
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Alert banner for soon reservations */}
+                      {isSoon && !isHappening && (
+                        <div className="w-full mt-2 flex items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-1.5">
+                          <Clock className="h-3 w-3 text-amber-700" />
+                          <span className="text-[11px] font-semibold text-amber-800">
+                            {minsUntilStart <= 0
+                              ? "Ya debería haber llegado ⏰"
+                              : minsUntilStart < 60
+                              ? `En menos de ${minsUntilStart} min ⚠️`
+                              : `En ~${Math.round(minsUntilStart / 60)}h ⏳`}
+                          </span>
                         </div>
-                      ))
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                      )}
+
+                      {isHappening && !r.status.includes("checked") && (
+                        <div className="w-full mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-1.5">
+                          <AlertTriangle className="h-3 w-3 text-emerald-700" />
+                          <span className="text-[11px] font-semibold text-emerald-800">
+                            ¡Está pasando ahora! Marca como "Llegó" 🔔
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick actions */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <button
+          onClick={() => navigate("/admin/reservas")}
+          className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-sm">
+            <CalendarCheck className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-slate-800">Ver todas las reservas</p>
+            <p className="text-xs text-slate-400">Gestiona el historial completo</p>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0 text-slate-300" />
+        </button>
+
+        <button
+          onClick={() => navigate("/admin/canchas")}
+          className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-sm">
+            <Building2 className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-slate-800">Administrar canchas</p>
+            <p className="text-xs text-slate-400">Agrega edita o desactiva canchas</p>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0 text-slate-300" />
+        </button>
       </div>
     </div>
   );
