@@ -14,6 +14,7 @@ import BenefitsSection from "./components/marketing/BenefitsSection";
 import AdminPanel from "./components/owner/AdminPanel";
 import CTASection from "./components/marketing/CTASection";
 import Footer from "./components/layout/Footer";
+import ScrollReveal from "./lib/useScrollReveal";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminReservations from "./components/admin/AdminReservations";
@@ -111,8 +112,8 @@ function LandingPage() {
       <div className="min-h-screen bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white font-sans">
         <Header dark={dark} setDark={setDark} />
         <Hero onSearch={handleHeroSearch} />
-        <ProblemSection />
-        <SolutionSection />
+        <ScrollReveal><ProblemSection /></ScrollReveal>
+        <ScrollReveal delay={100}><SolutionSection /></ScrollReveal>
         {courtsError && (
           <p className="mx-auto max-w-7xl px-4 pt-6 text-center text-xs font-medium text-amber-600 dark:text-amber-400 md:px-8">
             No se pudo conectar con el servidor, mostrando datos de muestra.
@@ -141,32 +142,36 @@ function LandingPage() {
           </section>
         ) : (
           <>
-            <CourtList
-              courts={filteredCourts}
-              selectedCourt={selectedCourt}
-              onSelectCourt={selectCourt}
-              search={search}
-              setSearch={setSearch}
-              sport={sport}
-              setSport={setSport}
-              zone={zone}
-              setZone={setZone}
-              time={time}
-              setTime={setTime}
-            />
-            <BookingFlow
-              court={selectedCourt}
-              selectedTime={selectedTime}
-              setSelectedTime={setSelectedTime}
-              availableTimes={availableTimes}
-              availableLoading={availableLoading}
-            />
+            <ScrollReveal>
+              <CourtList
+                courts={filteredCourts}
+                selectedCourt={selectedCourt}
+                onSelectCourt={selectCourt}
+                search={search}
+                setSearch={setSearch}
+                sport={sport}
+                setSport={setSport}
+                zone={zone}
+                setZone={setZone}
+                time={time}
+                setTime={setTime}
+              />
+            </ScrollReveal>
+            <ScrollReveal delay={100}>
+              <BookingFlow
+                court={selectedCourt}
+                selectedTime={selectedTime}
+                setSelectedTime={setSelectedTime}
+                availableTimes={availableTimes}
+                availableLoading={availableLoading}
+              />
+            </ScrollReveal>
           </>
         )}
-        <HowItWorks />
-        <BenefitsSection />
-        <AdminPanel />
-        <CTASection />
+        <ScrollReveal><HowItWorks /></ScrollReveal>
+        <ScrollReveal delay={100}><BenefitsSection /></ScrollReveal>
+        <ScrollReveal delay={200}><AdminPanel /></ScrollReveal>
+        <ScrollReveal delay={300}><CTASection /></ScrollReveal>
         <Footer />
       </div>
     </div>
