@@ -67,6 +67,26 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
         return;
       }
 
+      // Notificar al dueño por WhatsApp
+      try {
+        await fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            venueName: court.name,
+            courtName: `${court.sport} — ${matchingCourt.name}`,
+            guestName: guestName.trim(),
+            guestPhone: guestPhone.trim() || null,
+            startsAt: startsAt.toISOString(),
+            endsAt: endsAt.toISOString(),
+            price: court.price,
+            status: "pending",
+          }),
+        });
+      } catch (notifyErr) {
+        console.warn("Notificación no enviada:", notifyErr);
+      }
+
       setBookingStep(3);
       setBookingDone(true);
       setTimeout(() => {
