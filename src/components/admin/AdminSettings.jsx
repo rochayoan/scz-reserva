@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Save, ExternalLink, Clock, QrCode, Image } from "lucide-react";
+import { RefreshCw, Save, ExternalLink, Clock, QrCode, Upload, Trash2 } from "lucide-react";
 import { Card, CardContent, Button } from "../ui";
 import { useAuth } from "../../lib/AuthContext";
 import { getOrganization, updateOrganization } from "../../lib/adminSupabase";
@@ -20,11 +20,14 @@ const STATUSES = {
 export default function AdminSettings() {
   const { orgId, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
   const [qrUrl, setQrUrl] = useState("");
+  const [qrFile, setQrFile] = useState(null);
+  const [qrPreview, setQrPreview] = useState("");
   const [saved, setSaved] = useState(false);
 
   const load = async () => {
@@ -42,11 +45,36 @@ export default function AdminSettings() {
     load();
   }, []);
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Solo se permiten imágenes");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert("La imagen no debe superar 2MB");
+      return;
+    }
+    setQrFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setQrPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveQr = () => {
+    setQrFile(null);
+    setQrPreview("");
+    setQrUrl("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSave = async () => {
     setSaving(true);
+    const finalQr = qrPreview || qrUrl || null;
     const { error } = await updateOrganization(org.id, {
       name,
-      qr_image_url: qrUrl || null,
+      qr_image_url: finalQr,
     });
     if (!error) {
       setSaved(true);
@@ -122,27 +150,45 @@ export default function AdminSettings() {
                 Los clientes verán este QR al confirmar su reserva para que puedan pagar escaneando
               </p>
               <div className="mt-4 space-y-4">
+                {/* File upload */}
                 <div>
                   <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                    <Image className="h-3.5 w-3.5" />
-                    URL de la imagen QR
+                    <Upload className="h-3.5 w-3.5" />
+                    Sube tu código QR de pago
                   </label>
-                  <input
-                    value={qrUrl}
-                    onChange={(e) => setQrUrl(e.target.value)}
-                    placeholder="https://ejemplo.com/mi-qr.png"
-                    className="h-11 w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-mono text-xs"
-                  />
+                  <div className="flex items-center gap-3">
+                    <label className="flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 px-5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 hover:border-emerald-400">
+                      <Upload className="h-4 w-4" />
+                      {qrPreview || qrUrl ? "Cambiar imagen" : "Seleccionar imagen"}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                    {(qrPreview || qrUrl) && (
+                      <button
+                        onClick={handleRemoveQr}
+                        className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
                   <p className="mt-1.5 text-xs text-slate-400">
-                    Sube tu QR a Imgur, Cloudinary o cualquier hosting y pega el enlace aquí
+                    PNG o JPG · Máximo 2MB · Tu QR de banco para recibir pagos
                   </p>
                 </div>
 
-                {qrUrl && (
-                  <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white p-6">
+                {/* Preview */}
+                {(qrPreview || qrUrl) && (
+                  <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white p-6">
                     <p className="text-xs font-semibold text-slate-500">Vista previa</p>
                     <img
-                      src={qrUrl}
+                      src={qrPreview || qrUrl}
                       alt="QR de pago"
                       className="h-40 w-40 rounded-xl border border-slate-100 object-contain"
                       onError={(e) => {
@@ -151,6 +197,9 @@ export default function AdminSettings() {
                       }}
                     />
                     <p className="hidden text-xs text-red-500">No se pudo cargar la imagen</p>
+                    <p className="text-xs text-slate-400">
+                      Así lo verán tus clientes al reservar
+                    </p>
                   </div>
                 )}
               </div>
