@@ -98,10 +98,15 @@ export async function updateReservationStatus(id, status) {
   return { error };
 }
 
-export async function updatePaymentStatus(id, paymentStatus) {
+export async function updatePaymentStatus(id, paymentStatus, paymentReference) {
+  const updates = { payment_status: paymentStatus, updated_at: new Date().toISOString() };
+  if (paymentReference) {
+    updates.payment_reference = paymentReference;
+    updates.status = "confirmed";
+  }
   const { error } = await supabase
     .from("reservations")
-    .update({ payment_status: paymentStatus, updated_at: new Date().toISOString() })
+    .update(updates)
     .eq("id", id);
   return { error };
 }

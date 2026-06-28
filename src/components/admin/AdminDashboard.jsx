@@ -33,9 +33,28 @@ export default function AdminDashboard() {
     setActionLoading(null);
   };
 
-  const handlePaid = async (id) => {
+  const handlePaid = async (id, ref) => {
     setActionLoading("paid-" + id);
-    await updatePaymentStatus(id, "paid");
+    await updatePaymentStatus(id, "paid", ref);
+    // Notify via WhatsApp
+    try {
+      const reservation = kpis?.todayReservations?.find(r => r.id === id);
+      if (reservation) {
+        await fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            venueName: reservation.venue_name,
+            guestName: reservation.guest_name,
+            startsAt: reservation.starts_at,
+            endsAt: reservation.ends_at,
+            price: reservation.price_total,
+            status: "paid",
+            paymentRef: ref,
+          }),
+        });
+      }
+    } catch (_) {}
     await load();
     setActionLoading(null);
   };
@@ -204,6 +223,9 @@ export default function AdminDashboard() {
                           {r.payment_status === "paid" && (
                             <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
                               💰 Pagó
+                              {r.payment_reference && (
+                                <span className="ml-1 text-[9px] text-emerald-500">· Ref: {r.payment_reference}</span>
+                              )}
                             </span>
                           )}
                         </div>
@@ -242,7 +264,12 @@ export default function AdminDashboard() {
                             </button>
                             {r.payment_status !== "paid" && (
                               <button
-                                onClick={() => handlePaid(r.id)}
+                                onClick={() => {
+                                  const ref = prompt("Número de referencia de la transferencia:");
+                                  if (ref && ref.trim()) {
+                                    handlePaid(r.id, ref.trim());
+                                  }
+                                }}
                                 disabled={actionLoading === "paid-" + r.id}
                                 className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50"
                               >

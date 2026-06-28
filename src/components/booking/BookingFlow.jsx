@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { MapPin, Star, Check, QrCode, CheckCircle2, User, Phone, RefreshCw } from "lucide-react";
+import { MapPin, Star, Check, QrCode, CheckCircle2, User, Phone, RefreshCw, Hash, DollarSign } from "lucide-react";
 import { Card, CardContent, Button, SectionLabel, SectionTitle } from "../ui";
 
 export default function BookingFlow({ court, selectedTime, setSelectedTime, availableTimes, availableLoading }) {
@@ -8,9 +8,12 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
   const [bookingStep, setBookingStep] = useState(1);
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
+  const [paymentRef, setPaymentRef] = useState("");
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [duration, setDuration] = useState(1); // horas
+  const [duration, setDuration] = useState(1);
+  const [reservationId, setReservationId] = useState(null);
 
   const DURATIONS = [
     { value: 1, label: "1h" },
@@ -20,7 +23,6 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
     { value: 3, label: "3h" },
   ];
 
-  // Calcular hora de fin y precio
   const calcEndTime = () => {
     if (!selectedTime) return null;
     const [h, m] = selectedTime.split(":").map(Number);
@@ -43,17 +45,12 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
 
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
-    const [hourStr] = selectedTime.split(":");
-    const [minStr] = selectedTime.split(":").slice(1);
-    const hour = parseInt(hourStr, 10);
-    const min = parseInt(minStr, 10);
 
     const startsAt = new Date(`${todayStr}T${selectedTime}:00-04:00`);
     const endsAt = new Date(startsAt);
     endsAt.setMinutes(endsAt.getMinutes() + duration * 60);
 
     try {
-      // Find the actual court for this venue
       const { data: courts } = await supabase
         .from("courts")
         .select("id, sport")
@@ -70,20 +67,24 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
         return;
       }
 
-      const { error: insertError } = await supabase.from("reservations").insert({
-        organization_id: court.organization_id,
-        venue_id: court.id,
-        court_id: matchingCourt.id,
-        guest_name: guestName.trim(),
-        guest_phone: guestPhone.trim() || null,
-        starts_at: startsAt.toISOString(),
-        ends_at: endsAt.toISOString(),
-        status: "pending",
-        price_total: totalPrice,
-        payment_method: "none",
-        payment_status: "unpaid",
-        notes: `Reservado desde la web (${duration}h)`,
-      });
+      const { data: newReservation, error: insertError } = await supabase
+        .from("reservations")
+        .insert({
+          organization_id: court.organization_id,
+          venue_id: court.id,
+          court_id: matchingCourt.id,
+          guest_name: guestName.trim(),
+          guest_phone: guestPhone.trim() || null,
+          starts_at: startsAt.toISOString(),
+          ends_at: endsAt.toISOString(),
+          status: "pending",
+          price_total: totalPrice,
+          payment_method: "qr",
+          payment_status: "unpaid",
+          notes: `Reservado desde la web (${duration}h)`,
+        })
+        .select()
+        .single();
 
       if (insertError) {
         if (insertError.message?.includes("reservations_no_overlap")) {
@@ -95,7 +96,9 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
         return;
       }
 
-      // Notificar al dueño por WhatsApp
+      setReservationId(newReservation.id);
+
+      // Notificar al dueño
       try {
         await fetch("/api/notify", {
           method: "POST",
@@ -109,6 +112,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
             endsAt: endsAt.toISOString(),
             price: totalPrice,
             status: "pending",
+            reservationId: newReservation.id,
           }),
         });
       } catch (notifyErr) {
@@ -117,6 +121,60 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
 
       setBookingStep(3);
       setBookingDone(true);
+    } catch (err) {
+      setError("Error inesperado. Intenta de nuevo.");
+    }
+    setSaving(false);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!paymentRef.trim()) {
+      setError("Ingresa el número de referencia de tu transferencia");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      const { error: updateError } = await supabase
+        .from("reservations")
+        .update({
+          payment_status: "paid",
+          payment_reference: paymentRef.trim(),
+          status: "confirmed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", reservationId);
+
+      if (updateError) {
+        setError("Error al confirmar el pago: " + updateError.message);
+        setSaving(false);
+        return;
+      }
+
+      setPaymentConfirmed(true);
+
+      // Notificar al dueño que se pagó
+      try {
+        await fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            venueName: court.name,
+            courtName: `${court.sport}`,
+            guestName: guestName.trim(),
+            guestPhone: guestPhone.trim() || null,
+            startsAt: new Date(),
+            endsAt: new Date(),
+            price: totalPrice,
+            status: "paid",
+            paymentRef: paymentRef.trim(),
+          }),
+        });
+      } catch (notifyErr) {
+        console.warn("Notificación no enviada:", notifyErr);
+      }
     } catch (err) {
       setError("Error inesperado. Intenta de nuevo.");
     }
@@ -182,6 +240,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                               setSelectedTime(time);
                               setBookingStep(1);
                               setBookingDone(false);
+                              setPaymentConfirmed(false);
                             }}
                             className={`flex h-11 cursor-pointer items-center justify-center rounded-xl border px-5 text-sm font-semibold transition-colors ${
                               selectedTime === time
@@ -206,7 +265,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                     )}
                   </div>
 
-                  {/* Duration selector */}
+                  {/* Duration */}
                   {selectedTime && (
                     <div className="mt-4">
                       <p className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
@@ -274,36 +333,36 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
               </p>
 
               {/* Guest Info Form */}
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <User className="h-3.5 w-3.5" strokeWidth={2} />
-                    Tu nombre
-                  </label>
-                  <input
-                    type="text"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="Ej: Carlos Rojas"
-                    disabled={bookingDone}
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700"
-                  />
+              {!bookingDone && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      <User className="h-3.5 w-3.5" strokeWidth={2} />
+                      Tu nombre
+                    </label>
+                    <input
+                      type="text"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="Ej: Carlos Rojas"
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-slate-900 dark:border-slate-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      <Phone className="h-3.5 w-3.5" strokeWidth={2} />
+                      Teléfono (opcional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="Ej: 70000000"
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:bg-slate-900 dark:border-slate-700"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <Phone className="h-3.5 w-3.5" strokeWidth={2} />
-                    Teléfono (opcional)
-                  </label>
-                  <input
-                    type="tel"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    placeholder="Ej: 70000000"
-                    disabled={bookingDone}
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700"
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Summary */}
               <div className="mt-5 space-y-3 text-sm">
@@ -329,43 +388,112 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                 </div>
               </div>
 
-              {/* QR de pago */}
-              <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center dark:border-emerald-700 dark:bg-emerald-950/20">
-                {court.qr_image_url ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
-                      Paga con QR
-                    </p>
-                    <img
-                      src={court.qr_image_url}
-                      alt="QR de pago"
-                      className="h-52 w-52 rounded-xl border-4 border-white bg-white shadow-lg"
-                    />
-                    <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                      Escanea con tu app del banco
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-emerald-600 dark:text-emerald-400">
-                      <span className="flex items-center gap-1">
-                        <strong className="text-sm">Bs {totalPrice}</strong>
-                      </span>
-                      <span className="text-emerald-300">·</span>
-                      <span>{court.name}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-slate-800">
-                      <QrCode className="h-8 w-8 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
-                    </div>
-                    <p className="font-bold text-emerald-800 dark:text-emerald-200">Pago pendiente</p>
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                      El dueño confirmará tu reserva. Paga en el complejo.
-                    </p>
-                  </div>
-                )}
-              </div>
+              {/* QR + Reference Payment */}
+              {bookingDone && !paymentConfirmed && (
+                <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center dark:border-emerald-700 dark:bg-emerald-950/20">
+                  {court.qr_image_url ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                        💳 Paga con tu banco
+                      </p>
+                      <img
+                        src={court.qr_image_url}
+                        alt="QR de pago"
+                        className="h-52 w-52 rounded-xl border-4 border-white bg-white shadow-lg"
+                      />
+                      <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                        <p className="font-semibold">Banco Económico</p>
+                        <p>Cuenta: 1011068463</p>
+                        <p>Titular: Yoan Marc Rocha Ferrufino</p>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-emerald-600 dark:text-emerald-400">
+                        <span className="flex items-center gap-1">
+                          <strong className="text-sm">Bs {totalPrice}</strong>
+                        </span>
+                        <span className="text-emerald-300">·</span>
+                        <span>{court.name}</span>
+                      </div>
 
-              {error && (
+                      {/* Reference input */}
+                      <div className="w-full border-t border-emerald-200 pt-4 mt-2 dark:border-emerald-700">
+                        <p className="mb-3 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                          ✅ Ya pagaste? Ingresa tu número de referencia
+                        </p>
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-white px-3 dark:bg-slate-800 dark:border-emerald-600">
+                          <Hash className="h-4 w-4 shrink-0 text-emerald-500" strokeWidth={2} />
+                          <input
+                            type="text"
+                            value={paymentRef}
+                            onChange={(e) => setPaymentRef(e.target.value)}
+                            placeholder="Ej: 1234567890"
+                            className="h-11 w-full bg-transparent text-sm outline-none text-slate-700 placeholder:text-slate-400 dark:text-slate-200"
+                          />
+                        </div>
+                        <p className="mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+                          El número que te dio tu banco al hacer la transferencia
+                        </p>
+                      </div>
+
+                      {error && (
+                        <p className="text-sm font-medium text-red-600">{error}</p>
+                      )}
+
+                      <Button
+                        onClick={handleConfirmPayment}
+                        disabled={saving}
+                        className="mt-2 w-full py-4 text-base"
+                      >
+                        {saving ? "Confirmando..." : "✅ Ya pagué — Confirmar"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-slate-800">
+                        <QrCode className="h-8 w-8 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
+                      </div>
+                      <p className="font-bold text-emerald-800 dark:text-emerald-200">Pago pendiente</p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                        El dueño te informará cómo pagar.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Final Confirmation */}
+              {paymentConfirmed && (
+                <div className="mt-5 space-y-3">
+                  <div className="animate-fade-in-up rounded-2xl bg-emerald-100 p-4 text-center dark:bg-emerald-950/40">
+                    <p className="flex items-center justify-center gap-2 text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 className="h-5 w-5" strokeWidth={1.75} />
+                      ¡Reserva confirmada!
+                    </p>
+                    <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-400">
+                      {guestName}, te esperamos hoy a las {selectedTime} en {court.name}
+                    </p>
+                    <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200">
+                      <DollarSign className="h-3 w-3" strokeWidth={2.5} />
+                      Pago confirmado · Ref: {paymentRef}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setBookingDone(false);
+                      setPaymentConfirmed(false);
+                      setBookingStep(1);
+                      setGuestName("");
+                      setGuestPhone("");
+                      setPaymentRef("");
+                      setReservationId(null);
+                    }}
+                    className="w-full rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-slate-50"
+                  >
+                    Hacer otra reserva
+                  </button>
+                </div>
+              )}
+
+              {error && !bookingDone && (
                 <p className="mt-3 text-sm font-medium text-red-600">{error}</p>
               )}
 
@@ -375,35 +503,9 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                   disabled={saving}
                   className="mt-5 w-full py-4 text-base"
                 >
-                  {saving ? "Reservando..." : "Confirmar reserva"}
+                  {saving ? "Reservando..." : "Reservar ahora — Bs " + totalPrice}
                 </Button>
-              ) : (
-                <div className="mt-5 space-y-3">
-                  <div className="animate-fade-in-up rounded-2xl bg-emerald-100 p-4 text-center dark:bg-emerald-950/40">
-                    <p className="flex items-center justify-center gap-2 text-lg font-bold text-emerald-700 dark:text-emerald-300">
-                      <CheckCircle2 className="h-5 w-5" strokeWidth={1.75} />
-                      ¡Reserva creada!
-                    </p>
-                    <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-400">
-                      {guestName}, te esperamos hoy a las {selectedTime} en {court.name}
-                    </p>
-                    <p className="mt-2 text-xs text-emerald-600">
-                      Escanea el QR para pagar
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setBookingDone(false);
-                      setBookingStep(1);
-                      setGuestName("");
-                      setGuestPhone("");
-                    }}
-                    className="w-full rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-slate-50"
-                  >
-                    Hacer otra reserva
-                  </button>
-                </div>
-              )}
+              ) : null}
             </CardContent>
           </Card>
         </div>

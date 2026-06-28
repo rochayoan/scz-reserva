@@ -169,7 +169,7 @@ export default function AdminReservations() {
               <table className="w-full min-w-[800px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    {["Cliente", "Cancha", "Fecha / Hora", "Pago", "Estado", "Acciones"].map((h) => (
+                    {["Cliente", "Cancha", "Fecha / Hora", "Referencia", "Pago", "Estado", "Acciones"].map((h) => (
                       <th key={h} className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
                         {h}
                       </th>
@@ -224,6 +224,15 @@ export default function AdminReservations() {
                             minute: "2-digit",
                           })}
                         </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        {r.payment_reference ? (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-mono font-semibold text-slate-700">
+                            {r.payment_reference}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-300">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <p className="font-semibold text-slate-700">

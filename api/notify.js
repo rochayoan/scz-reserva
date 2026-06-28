@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { venueName, courtName, guestName, guestPhone, startsAt, endsAt, price, status } = req.body;
+    const { venueName, courtName, guestName, guestPhone, startsAt, endsAt, price, status, paymentRef, reservationId } = req.body;
 
     if (!venueName || !guestName) {
       return res.status(400).json({ error: "Faltan datos requeridos" });
@@ -35,18 +35,32 @@ export default async function handler(req, res) {
       minute: "2-digit",
     });
 
-    const message = `🆕 *Nueva reserva recibida*
+    let message;
+
+    if (status === "paid") {
+      message = `✅ *Pago confirmado*
 
 ━━━━━━━━━━━━━
 🏟️ *${venueName}*
-${courtName ? `🎾 *${courtName}*\n` : ""}👤 *${guestName}*
-${guestPhone ? `📱 ${guestPhone}\n` : ""}📅 *${fecha}* — ${horaInicio} a ${horaFin}
-💰 *Bs ${price}*
-📌 *${status === "pending" ? "Pendiente de confirmación" : status}*
+${courtName ? `🎾 *${courtName}*\\n` : ""}👤 *${guestName}*
+${guestPhone ? `📱 ${guestPhone}\\n` : ""}💰 *Bs ${price}*
+🔖 Ref: *${paymentRef || "—"}*
 ━━━━━━━━━━━━━
 
-✅ Confírmala desde tu panel:
-🔗 scz-reserva.vercel.app/admin/reservas`;
+El cliente ya pagó y su reserva está confirmada automáticamente.`;
+    } else {
+      message = `🆕 *Nueva reserva recibida*
+
+━━━━━━━━━━━━━
+🏟️ *${venueName}*
+${courtName ? `🎾 *${courtName}*\\n` : ""}👤 *${guestName}*
+${guestPhone ? `📱 ${guestPhone}\\n` : ""}📅 *${fecha}* — ${horaInicio} a ${horaFin}
+💰 *Bs ${price}*
+📌 *Pendiente de pago*
+━━━━━━━━━━━━━
+
+El cliente pagará escaneando el QR desde su banco e ingresará el número de referencia.`;
+    }
 
     // Enviar vía Kapso WhatsApp API
     const url = `https://api.kapso.ai/meta/whatsapp/v24.0/${phoneNumberId}/messages`;
