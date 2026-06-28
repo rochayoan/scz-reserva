@@ -10,21 +10,6 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
   const [guestPhone, setGuestPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [qrImageUrl, setQrImageUrl] = useState("");
-
-  // Load QR from organization
-  useEffect(() => {
-    if (!court?.organization_id) return;
-    supabase
-      .from("organizations")
-      .select("qr_image_url")
-      .eq("id", court.organization_id)
-      .single()
-      .then(({ data }) => {
-        if (data?.qr_image_url) setQrImageUrl(data.qr_image_url);
-      })
-      .catch(() => {});
-  }, [court?.organization_id]);
 
   const handleConfirm = async () => {
     if (!guestName.trim()) {
@@ -294,32 +279,34 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                 </div>
               </div>
 
-              {/* QR Payment */}
-              <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center dark:border-emerald-700 dark:bg-emerald-950/20">
-                {qrImageUrl ? (
+              {/* QR de pago */}
+              <div className="mt-6 rounded-2xl border border-dashed border-emerald-400 bg-emerald-50 p-5 text-center dark:border-emerald-700 dark:bg-emerald-950/20">
+                {court.qr_image_url ? (
                   <div className="flex flex-col items-center gap-3">
                     <img
-                      src={qrImageUrl}
+                      src={court.qr_image_url}
                       alt="QR de pago"
                       className="h-36 w-36 rounded-xl border-2 border-white bg-white shadow-sm"
+                      onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }}
                     />
+                    <p className="hidden text-xs text-red-500">No se pudo cargar el QR</p>
                     <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                       Escanea para pagar
                     </p>
                     <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                      Paga desde tu app del banco y muestra el comprobante
+                      Paga desde tu app del banco <strong>Bs {court.price}</strong>
                     </p>
                   </div>
                 ) : (
-                  <>
-                    <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-slate-800">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-slate-800">
                       <QrCode className="h-8 w-8 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
                     </div>
                     <p className="font-bold text-emerald-800 dark:text-emerald-200">Pago pendiente</p>
-                    <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">
                       El dueño confirmará tu reserva. Paga en el complejo.
                     </p>
-                  </>
+                  </div>
                 )}
               </div>
 
