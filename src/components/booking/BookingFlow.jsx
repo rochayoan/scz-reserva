@@ -89,12 +89,7 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
 
       setBookingStep(3);
       setBookingDone(true);
-      setTimeout(() => {
-        setBookingDone(false);
-        setBookingStep(1);
-        setGuestName("");
-        setGuestPhone("");
-      }, 5000);
+      // NO auto-reset - el QR debe quedar visible para que paguen
     } catch (err) {
       setError("Error inesperado. Intenta de nuevo.");
     }
@@ -323,14 +318,30 @@ export default function BookingFlow({ court, selectedTime, setSelectedTime, avai
                   {saving ? "Reservando..." : "Confirmar reserva"}
                 </Button>
               ) : (
-                <div className="mt-5 animate-fade-in-up rounded-2xl bg-emerald-100 p-4 text-center dark:bg-emerald-950/40">
-                  <p className="flex items-center justify-center gap-2 text-lg font-bold text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="h-5 w-5" strokeWidth={1.75} />
-                    ¡Reserva creada!
-                  </p>
-                  <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-400">
-                    {guestName}, te esperamos hoy a las {selectedTime} en {court.name}
-                  </p>
+                <div className="mt-5 space-y-3">
+                  <div className="animate-fade-in-up rounded-2xl bg-emerald-100 p-4 text-center dark:bg-emerald-950/40">
+                    <p className="flex items-center justify-center gap-2 text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 className="h-5 w-5" strokeWidth={1.75} />
+                      ¡Reserva creada!
+                    </p>
+                    <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-400">
+                      {guestName}, te esperamos hoy a las {selectedTime} en {court.name}
+                    </p>
+                    <p className="mt-2 text-xs text-emerald-600">
+                      Escanea el QR para pagar
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setBookingDone(false);
+                      setBookingStep(1);
+                      setGuestName("");
+                      setGuestPhone("");
+                    }}
+                    className="w-full rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-slate-50"
+                  >
+                    Hacer otra reserva
+                  </button>
                 </div>
               )}
             </CardContent>
