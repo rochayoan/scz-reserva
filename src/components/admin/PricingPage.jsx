@@ -117,7 +117,7 @@ export default function PricingPage() {
             Administra tu complejo deportivo por solo
           </p>
           <p className="mt-2 text-4xl font-black tracking-tight text-emerald-700">
-            Bs 150<span className="text-lg font-normal text-slate-400">/mes</span>
+            Bs 99<span className="text-lg font-normal text-slate-400">/mes</span>
           </p>
         </div>
 
@@ -156,7 +156,7 @@ export default function PricingPage() {
               <div className="border-t border-slate-200 pt-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-500">Monto mensual</span>
-                  <span className="text-lg font-black text-emerald-700">Bs 150</span>
+                  <span className="text-lg font-black text-emerald-700">Bs 99</span>
                 </div>
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function PricingPage() {
                   1
                 </div>
                 <p className="text-sm text-slate-600">
-                  Transfiere <strong className="text-slate-800">Bs 150</strong> a la cuenta de arriba
+                  Transfiere <strong className="text-slate-800">Bs 99</strong> a la cuenta de arriba
                 </p>
               </div>
               <div className="flex gap-3">
@@ -200,7 +200,7 @@ export default function PricingPage() {
             </div>
 
             <a
-              href={`https://wa.me/59172654203?text=${encodeURIComponent(`Hola, acabo de transferir Bs 150 para activar mi suscripción de SCZ Reserva. Mi complejo: ${orgName}`)}`}
+              href={`https://wa.me/59172654203?text=${encodeURIComponent(`Hola, acabo de transferir Bs 99 para activar mi suscripción de SCZ Reserva. Mi complejo: ${orgName}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-800 hover:shadow-md"
